@@ -93,10 +93,30 @@ def _r07(app: Application):
     return _r("R07", "insufficient_evidence", "It is not clear the event is open to all international students.",
               missing="State that all international students can attend, or name at least 3 providers.")
 
+def _custom(app: Application, rule: Rule):
+    """Rules added by a super admin: match the admin's keywords in the budget and project text."""
+    words = [k for k in rule.keywords if k.strip()]
+    if not words:
+        return _r(rule.id, "needs_officer_judgement", "Offline test mode can't assess this rule (no keywords set).")
+    pat = "|".join(re.escape(w) for w in words)
+    hit = next(((f"budget[{i}].item", b.item) for i, b in enumerate(app.budget) if re.search(pat, b.item, re.I)), None)
+    for field in ("description", "who_can_attend", "wellbeing_benefit", "title"):
+        if hit:
+            break
+        s = _sentence(getattr(app.project, field), pat)
+        hit = (f"project.{field}", s) if s else None
+    if rule.type == "exclusion":
+        return (_r(rule.id, "not_met", f"Matches a keyword for this rule: {hit[1]}", [hit], "Remove or explain this.", hit[1])
+                if hit else _r(rule.id, "met", "No keyword for this rule found."))
+    return (_r(rule.id, "met", "A keyword for this rule was found.", [hit]) if hit else
+            _r(rule.id, "insufficient_evidence", "No keyword for this rule found.", missing=rule.evidence_needed))
+
 def review(app: Application, rules: list[Rule], rubric: Rubric) -> dict:
     out = {}
     for r in rules:
-        if r.id in EXCLUSIONS:
+        if r.custom:
+            out[r.id] = _custom(app, r)
+        elif r.id in EXCLUSIONS:
             out[r.id] = _exclusion(app, r.id)
         elif r.id == "R01":
             out[r.id] = _r01(app, rubric)

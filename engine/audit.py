@@ -21,6 +21,10 @@ def _conn():
         officer_verdict TEXT, overridden INTEGER, blind_review INTEGER, officer_note TEXT,
         officer TEXT, decided_at TEXT, seconds_spent REAL)""")
     c.execute("CREATE TABLE IF NOT EXISTS inbox (application_id TEXT PRIMARY KEY, received_at TEXT)")
+    c.execute("""CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, display_name TEXT, role TEXT,
+        salt TEXT, pw_hash TEXT, active INTEGER, created_by TEXT, created_at TEXT)""")
+    c.execute("""CREATE TABLE IF NOT EXISTS rule_changes (id INTEGER PRIMARY KEY AUTOINCREMENT, rule_id TEXT,
+        action TEXT, rule_json TEXT, changed_by TEXT, changed_at TEXT)""")
     c.execute("""CREATE TABLE IF NOT EXISTS mail (message_id TEXT PRIMARY KEY, sender TEXT, subject TEXT,
         application_id TEXT, problems TEXT, body TEXT, fetched_at TEXT)""")
     c.execute("""CREATE TABLE IF NOT EXISTS final_decisions (
@@ -98,3 +102,12 @@ def all_finals() -> list[dict]:
 def finals() -> dict[str, dict]:
     """Most recent final decision per application."""
     return {r["application_id"]: r for r in reversed(all_finals())}
+
+# ---------- rule changes (super admin) ----------
+def record_rule_change(rule_id: str, action: str, rule_json: str, by: str) -> None:
+    with _conn() as c:
+        c.execute("INSERT INTO rule_changes (rule_id, action, rule_json, changed_by, changed_at) VALUES (?,?,?,?,?)",
+                  (rule_id, action, rule_json, by, datetime.now().isoformat()))
+
+def rule_changes() -> list[dict]:
+    return _rows("SELECT id, rule_id, action, changed_by, changed_at FROM rule_changes ORDER BY id DESC")

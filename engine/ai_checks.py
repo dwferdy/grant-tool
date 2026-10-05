@@ -147,7 +147,8 @@ def _to_cell(app: Application, rule: Rule, run1: Optional[_AIRuleResult], run2: 
 
     if verdict == Verdict.NOT_MET and not verified:
         verdict, reasoning = Verdict.INSUFFICIENT_EVIDENCE, reasoning + " [AI suggested not met but gave no verifiable quote.]"
-    if verdict == Verdict.MET and rule.id in GATES_NEEDING_EVIDENCE and not verified:
+    needs_evidence = rule.id in GATES_NEEDING_EVIDENCE or (rule.custom and rule.type == "eligibility_gate")
+    if verdict == Verdict.MET and needs_evidence and not verified:
         verdict, reasoning = Verdict.INSUFFICIENT_EVIDENCE, reasoning + " [No verifiable quote supports this.]"
     if not agree:
         verdict = Verdict.NEEDS_OFFICER_JUDGEMENT
@@ -158,7 +159,8 @@ def _to_cell(app: Application, rule: Rule, run1: Optional[_AIRuleResult], run2: 
     if dropped:
         reasoning += f" [{dropped} unverifiable quote(s) removed.]"
 
-    values = {"applicant_name": app.applicant.name} if rule.id == "R01" else \
+    values = {"item": run1.reason_value, "evidence": run1.reason_value} if rule.custom else \
+             {"applicant_name": app.applicant.name} if rule.id == "R01" else \
              {_PLACEHOLDER.get(rule.id, "evidence" if "{evidence}" in rule.plain_english_reason else "item"): run1.reason_value}
     return Cell(application_id=app.id, rule_id=rule.id, verdict=verdict, checked_by="ai",
                 applicant_quotes=verified, reasoning=reasoning.strip(), missing=run1.missing or None,

@@ -84,10 +84,31 @@ CHECKS = {
   "R16": lambda a, rb: _cap(a, "R16", "catering", 0.25, "Catering"),
 }
 
+def check_template(app: Application, rule) -> Cell:
+    """Code rules a super admin built from a template (see engine/rules_admin.py)."""
+    p, rid = rule.params, rule.id
+    if p["template"] == "category_cap":
+        return _cap(app, rid, p["category"], p["pct"], p["category"].replace("_", " ").capitalize())
+    if p["template"] == "max_total":
+        ok = app.total_requested <= p["amount"]
+        return _cell(app, rid, Verdict.MET if ok else Verdict.NOT_MET,
+                     f"Requested ${app.total_requested:,.2f}; maximum ${p['amount']:,.2f}.",
+                     None if ok else f"Reduce the request to ${p['amount']:,.2f} or less.",
+                     total_requested=f"{app.total_requested:,.2f}")
+    if p["template"] == "required_field":
+        try:
+            value = field_text(app, p["field"]).strip()
+        except AttributeError:      # e.g. no auspicing body at all
+            value = ""
+        return _cell(app, rid, Verdict.MET if value else Verdict.INSUFFICIENT_EVIDENCE,
+                     f"{p['field']}: {'present' if value else 'missing'}.", None if value else p["field"])
+    raise ValueError(f"{rid}: unknown template {p['template']}")
+
 def run_code_checks(app: Application, rubric: Rubric) -> list[Cell]:
-    code_rules = [r.id for r in rubric.rules if r.check_method == "code"]
-    assert set(code_rules) == set(CHECKS), f"Rubric/code mismatch: {set(code_rules) ^ set(CHECKS)}"
-    return [CHECKS[rid](app, rubric) for rid in code_rules]
+    code_rules = [r for r in rubric.rules if r.check_method == "code"]
+    builtin = {r.id for r in code_rules if not r.params}
+    assert builtin == set(CHECKS), f"Rubric/code mismatch: {builtin ^ set(CHECKS)}"
+    return [check_template(app, r) if r.params else CHECKS[r.id](app, rubric) for r in code_rules]
 
 # ---------- Anti-hallucination guard ----------
 def _norm(s: str) -> str:

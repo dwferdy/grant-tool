@@ -30,6 +30,14 @@ class Rule(BaseModel):
     if_missing: str
     plain_english_reason: str
     verified_against_pdf: bool = False
+    # Optional, for rules a super admin adds in the app (data/custom_rules.json). Official rules leave these unset.
+    short_name: Optional[str] = None
+    params: Optional[dict] = None       # code rule built from a template, e.g. {"template": "category_cap", ...}
+    keywords: list[str] = []            # used only by the offline keyword reviewer (AI_MODE=offline)
+    custom: bool = False
+    active: bool = True
+    added_by: Optional[str] = None
+    added_at: Optional[datetime] = None
 
 class Round(BaseModel):
     name: str

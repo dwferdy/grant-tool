@@ -7,12 +7,13 @@ import html, re, time
 from datetime import datetime
 import pandas as pd
 import streamlit as st
-from engine.loader import load_rubric, load_applications
+from engine.loader import load_applications
 from engine.models import Verdict, OfficerDecision
 from engine.assess import assess, outcome
 from engine.ai_checks import api_available, cached_cells, offline_mode, MODEL
 from engine.letters import render_letter
-from engine import audit, intake
+from engine import audit, intake, users, rules_admin
+from engine.rules_admin import TEMPLATES, REQUIRED_FIELDS
 
 st.set_page_config(page_title="Grant Inbox", page_icon="📨", layout="wide")
 st.markdown("""<style>
@@ -29,7 +30,7 @@ mark {background:#ffe08a; color:#111; padding:0 3px; border-radius:3px}
 .step.now {opacity:1; background:rgba(240,180,0,.18); border-color:rgba(240,180,0,.6); font-weight:600}
 </style>""", unsafe_allow_html=True)
 
-RB = load_rubric()
+RB = rules_admin.active_rubric()                  # official rules + active rules added by a super admin
 SAMPLES = load_applications()                     # synthetic demo set
 APPS = {**SAMPLES, **intake.load_received()}     # + applications received by email
 RULES = {r.id: r for r in RB.rules}
@@ -48,12 +49,57 @@ OUTCOME = {"approve": "🟢 Approve", "reject": "🔴 Reject", "clarify": "🟡 
 OFFICER_CHOICES = [Verdict.MET, Verdict.NOT_MET, Verdict.INSUFFICIENT_EVIDENCE, Verdict.NOT_APPLICABLE]
 FLAG_ORDER = [Verdict.NOT_MET, Verdict.INSUFFICIENT_EVIDENCE, Verdict.NEEDS_OFFICER_JUDGEMENT, Verdict.MET, Verdict.NOT_APPLICABLE]
 
+def short(rid: str) -> str:
+    return SHORT.get(rid) or RULES[rid].short_name or rid
+
+# ---------- login ----------
+def auth_gate() -> dict:
+    if st.session_state.get("user"):
+        return st.session_state.user
+    _, mid, _ = st.columns([1, 1.3, 1])
+    with mid:
+        if users.count() == 0:
+            st.title("👋 First-time setup")
+            st.write("Create the first **super admin** account. Super admins manage rules and users, and can review too.")
+            with st.form("setup"):
+                name = st.text_input("Your name")
+                username = st.text_input("Username")
+                pw = st.text_input(f"Password (at least {users.MIN_PASSWORD} characters)", type="password")
+                pw2 = st.text_input("Repeat password", type="password")
+                if st.form_submit_button("Create super admin", type="primary"):
+                    try:
+                        if pw != pw2:
+                            raise ValueError("The passwords don't match.")
+                        users.create(username, name, "super_admin", pw, created_by="first-time setup")
+                        st.session_state.user = users.verify(username, pw)
+                        st.rerun()
+                    except ValueError as e:
+                        st.error(str(e))
+        else:
+            st.title("🔐 Sign in")
+            st.caption("Grant Eligibility Assistant")
+            with st.form("login"):
+                username = st.text_input("Username")
+                pw = st.text_input("Password", type="password")
+                if st.form_submit_button("Sign in", type="primary"):
+                    user = users.verify(username, pw)
+                    if user:
+                        st.session_state.user = user
+                        st.rerun()
+                    st.error("Wrong username or password, or the account is deactivated.")
+    st.stop()
+
+USER = auth_gate()
+officer = USER["display_name"]
+IS_ADMIN = USER["role"] == "super_admin"
+
 # ---------- state ----------
 if "cells" not in st.session_state:
     st.session_state.cells = {}
 def cells_for(aid: str) -> dict:
     if aid not in st.session_state.cells:
-        st.session_state.cells[aid] = assess(APPS[aid], RB)   # uses cached AI results, never calls the API
+        # Uses cached AI results. Never calls Claude here; the free offline reviewer may re-run (e.g. after a rule change).
+        st.session_state.cells[aid] = assess(APPS[aid], RB, call_api=offline_mode() and aid in RECEIVED)
     return st.session_state.cells[aid]
 
 RECEIVED = {a: t for a, t in audit.received().items() if a in APPS}
@@ -95,9 +141,13 @@ def close_app():
 
 # ---------- sidebar ----------
 with st.sidebar:
-    st.markdown("### 👋 Officer")
-    officer = st.text_input("Your name", key="officer", placeholder="Type your name to start")
-    page = st.radio("Go to", ["📨 Inbox", "🗂 Audit log"], label_visibility="collapsed")
+    st.markdown(f"### 👋 {html.escape(officer)}")
+    st.caption(f"{users.ROLES[USER['role']]} · @{USER['username']}")
+    if st.button("Sign out"):
+        st.session_state.clear()
+        st.rerun()
+    pages = ["📨 Inbox", "🗂 Audit log"] + (["⚙️ Rules", "👥 Users"] if IS_ADMIN else [])
+    page = st.radio("Go to", pages, label_visibility="collapsed")
     st.divider()
     blind = st.toggle("Blind review", help="Hide everything the AI found until you have decided each rule yourself. "
                                            "Use this to check you are not just agreeing with the AI.")
@@ -111,7 +161,7 @@ with st.sidebar:
                    "Code checks still run; anything that needs AI comes to you.")
     with st.expander("How it works"):
         st.markdown("1. **📨 An application arrives** in your inbox.\n"
-                    "2. **🤖 The AI and code check it** against all 26 rules.\n"
+                    f"2. **🤖 The AI and code check it** against all {len(RULES)} rules.\n"
                     "3. **👤 You review** only what was flagged (and the 3 rules a person must always decide).\n"
                     "4. **✉️ You send the decision.** The letter explains each reason in plain English.")
 
@@ -183,6 +233,16 @@ def inbox():
     c3.metric("Emails we couldn't read", len(audit.unreadable_mail()))
 
     mail_box()
+    if api_available() and not offline_mode():
+        stale = [a for a in RECEIVED if a not in FINALS and cached_cells(APPS[a], RB) is None]
+        if stale:
+            st.warning(f"{len(stale)} open application(s) haven't been checked by the AI against the current rules "
+                       "(new arrivals while AI was off, or the rules changed). Their AI items are waiting for you.")
+            if st.button(f"🤖 Re-check {len(stale)} with AI (uses API credits)"):
+                for a in stale:
+                    st.session_state.cells.pop(a, None)
+                    receive(a)
+                st.rerun()
     not_arrived = [a for a in SAMPLES if a not in RECEIVED]
     with st.expander("🧪 Demo: sample applications (no email needed)"):
         b1, b2, b3 = st.columns([2, 2, 1])
@@ -222,7 +282,7 @@ def inbox():
             else:
                 mid.markdown(f"AI suggests  \n**{OUTCOME[ai_suggestion(aid)]}**")
                 issues = [r for r in to_review(aid, False) if cells[r].verdict in (Verdict.NOT_MET, Verdict.INSUFFICIENT_EVIDENCE)]
-                left.caption("Flagged: " + ", ".join(f"{ICON[cells[r].verdict]} {SHORT[r]}" for r in issues)
+                left.caption("Flagged: " + ", ".join(f"{ICON[cells[r].verdict]} {short(r)}" for r in issues)
                              if issues else "No problems found by the checks.")
             right.button("Open →" if aid not in FINALS else "View", key=f"open_{aid}", on_click=open_app, args=(aid,),
                          width="stretch", type="primary" if aid not in FINALS else "secondary")
@@ -268,7 +328,7 @@ def rule_card(aid: str, rid: str, blind: bool, locked: bool):
     with st.container(border=True):
         top_l, top_r = st.columns([4, 1.4], vertical_alignment="center")
         icon = ICON[dec.officer_verdict] if dec else (ICON[cell.verdict] if show_ai else "▫️")
-        top_l.markdown(f"{icon} **{SHORT[rid]}** <small style='opacity:.6'>{rid}</small>", unsafe_allow_html=True)
+        top_l.markdown(f"{icon} **{short(rid)}** <small style='opacity:.6'>{rid}</small>", unsafe_allow_html=True)
         if dec:
             top_r.markdown(f"<div style='text-align:right'><small>✔ You: <b>{LABEL[dec.officer_verdict]}</b></small></div>",
                            unsafe_allow_html=True)
@@ -422,10 +482,165 @@ def audit_log():
         st.dataframe(df, hide_index=True, width="stretch")
     else:
         st.info("None yet.")
+    if IS_ADMIN:
+        st.subheader("Rule changes")
+        changes = audit.rule_changes()
+        if changes:
+            st.dataframe(pd.DataFrame(changes), hide_index=True, width="stretch")
+        else:
+            st.info("None yet.")
+
+# ---------- super admin: rules ----------
+METHODS = {"code": "🧮 Automatic check (numbers or a required field)",
+           "ai_evidence": "🤖 AI looks for evidence in the application",
+           "officer_judgement": "👤 An officer always decides"}
+
+def rules_page():
+    st.title("⚙️ Grant rules")
+    st.caption(f"{RB.grant} · round {RB.round.name}")
+    custom = rules_admin.load_custom()
+    tab_list, tab_add = st.tabs([f"📋 All rules ({len(RULES)} active)", "➕ Add a rule"])
+
+    with tab_list:
+        st.markdown("#### Added by super admins")
+        if not custom:
+            st.info("No rules added yet. Use the **Add a rule** tab.")
+        for r in custom:
+            with st.container(border=True):
+                a, b = st.columns([5, 1.2], vertical_alignment="center")
+                a.markdown(f"{'🟢' if r.active else '⚪️'} **{html.escape(r.short_name or r.id)}** "
+                           f"<small style='opacity:.6'>{r.id} · {METHODS[r.check_method]}</small>", unsafe_allow_html=True)
+                a.caption(r.rule)
+                if b.button("Switch off" if r.active else "Switch on", key=f"tog_{r.id}", width="stretch"):
+                    rules_admin.set_active(r.id, not r.active, USER["username"])
+                    st.session_state.cells = {}
+                    st.toast(f"{r.id} switched {'off' if r.active else 'on'}")
+                    st.rerun()
+                with st.expander("Details"):
+                    st.markdown(f"**Check:** `{r.check}`  \n**Letter text:** {r.plain_english_reason}  \n"
+                                f"**Keywords (offline mode):** {', '.join(r.keywords) or '—'}  \n"
+                                f"**Added by** {r.added_by} on {r.added_at:%d %b %Y %H:%M}" if r.added_at else "")
+        st.markdown("#### Official rules (from the published guidelines, read-only)")
+        st.dataframe(pd.DataFrame([{"ID": r.id, "Rule": short(r.id), "Checked by": METHODS[r.check_method].split(" ", 1)[1],
+                                    "Source": r.source.section, "Full text": r.rule}
+                                   for r in RB.rules if not r.custom]), hide_index=True, width="stretch")
+
+    with tab_add:
+        add_rule_form()
+
+def add_rule_form():
+    st.markdown("Rules apply to every application that hasn't been decided yet. Decisions already sent don't change.")
+    if api_available() and not offline_mode():
+        st.warning("With Claude on, adding a rule means open applications need a new AI check (uses API credits). "
+                   "You'll get a button for that in the inbox.")
+    method = st.radio("How should this rule be checked?", list(METHODS), format_func=METHODS.get, key="new_method")
+    name = st.text_input("Short name (shown to officers)", placeholder="e.g. Marketing ≤ 20%", key="new_name")
+    params, keywords, rtype, text = None, [], "eligibility_gate", {}
+
+    if method == "code":
+        template = st.selectbox("Type of check", list(TEMPLATES), format_func=TEMPLATES.get, key="new_tpl")
+        if template == "category_cap":
+            c1, c2 = st.columns(2)
+            cat = c1.selectbox("Budget category", RB.budget_categories, format_func=lambda c: c.replace("_", " "))
+            pct = c2.number_input("Maximum % of the total grant", 1, 100, 20)
+            params = {"template": template, "category": cat, "pct": pct / 100}
+        elif template == "max_total":
+            params = {"template": template, "amount": float(st.number_input("Maximum amount ($)", 100, 100000, 5000, step=500))}
+        else:
+            params = {"template": template, "field": st.selectbox("Field", list(REQUIRED_FIELDS), format_func=REQUIRED_FIELDS.get)}
+        text = rules_admin.code_rule_text(template, params)
+        rtype = text["type"]
+        rule_text = st.text_area("Rule", text["rule"], key=f"rt_{template}_{params}")
+        check = text["check"]
+        evidence = "Budget and application fields"
+        reason_default = text["plain_english_reason"]
+        st.caption(f"Code check: `{check}`")
+    else:
+        if method == "ai_evidence":
+            rtype = st.radio("What kind of rule?", ["exclusion", "eligibility_gate"], horizontal=True,
+                             format_func={"exclusion": "🚫 Something we can't fund",
+                                          "eligibility_gate": "✔️ Something the applicant must show"}.get)
+        else:
+            rtype = "assessment_criterion"
+        rule_text = st.text_area("Rule (one clear sentence)", placeholder="e.g. Funding cannot be used for gift cards or vouchers.",
+                                 key="new_rule_text")
+        check = st.text_area("How should it be checked? (instructions for the AI / officer)",
+                             placeholder="e.g. Look in the budget items and description for gift cards, vouchers or prepaid cards.",
+                             key="new_check")
+        evidence = st.text_input("Evidence needed", placeholder="e.g. Budget items", key="new_evidence")
+        if method == "ai_evidence":
+            kw = st.text_input("Keywords for offline test mode (comma separated, optional)",
+                               placeholder="gift card, voucher, prepaid card", key="new_kw")
+            keywords = [k for k in kw.split(",")]
+        reason_default = rules_admin.default_ai_reason(rule_text or "[rule]", rtype)
+
+    reason = st.text_area("What the applicant reads in the letter", reason_default, key=f"reason_{method}_{rtype}_{hash(reason_default)}",
+                          help="{amount}, {limit}, {total_requested}, {evidence}, {item} are filled in automatically.")
+    with st.expander("Source (optional)"):
+        doc = st.text_input("Document", rules_admin.INTERNAL_SOURCE["document"])
+        sec = st.text_input("Section", "")
+        url = st.text_input("Link", "")
+
+    if st.button("➕ Add rule", type="primary"):
+        if not name.strip() or not rule_text.strip() or not check.strip():
+            st.error("Short name, rule and how-to-check are required.")
+            return
+        r = rules_admin.add_rule(by=USER["username"], short_name=name, rule=rule_text, check_method=method, rtype=rtype,
+                                 check=check, evidence_needed=evidence or "Application text", plain_english_reason=reason,
+                                 source={"document": doc, "section": sec, "url": url}, params=params, keywords=keywords)
+        st.session_state.cells = {}
+        st.toast(f"Rule {r.id} added", icon="✅")
+        st.rerun()
+
+# ---------- super admin: users ----------
+def users_page():
+    st.title("👥 Users")
+    rows = users.list_users()
+    for u in rows:
+        with st.container(border=True):
+            a, b, c = st.columns([4, 1.4, 1.4], vertical_alignment="center")
+            a.markdown(f"{'🟢' if u['active'] else '⚪️'} **{html.escape(u['display_name'])}** · @{u['username']} · "
+                       f"{users.ROLES[u['role']]}  \n<small style='opacity:.6'>added by {u['created_by']} "
+                       f"on {datetime.fromisoformat(u['created_at']):%d %b %Y}</small>", unsafe_allow_html=True)
+            if u["username"] != USER["username"]:
+                if b.button("Deactivate" if u["active"] else "Activate", key=f"act_{u['username']}", width="stretch"):
+                    try:
+                        users.set_active(u["username"], not u["active"])
+                        st.rerun()
+                    except ValueError as e:
+                        st.error(str(e))
+            with c.popover("Reset password", width="stretch"):
+                pw = st.text_input("New password", type="password", key=f"pw_{u['username']}")
+                if st.button("Save", key=f"pws_{u['username']}"):
+                    try:
+                        users.set_password(u["username"], pw)
+                        st.success("Password changed.")
+                    except ValueError as e:
+                        st.error(str(e))
+
+    st.markdown("#### ➕ Add a user")
+    with st.form("new_user", clear_on_submit=True):
+        c1, c2 = st.columns(2)
+        name = c1.text_input("Name")
+        username = c2.text_input("Username")
+        role = c1.selectbox("Role", list(users.ROLES), index=1, format_func=users.ROLES.get)
+        pw = c2.text_input(f"Temporary password (≥ {users.MIN_PASSWORD} characters)", type="password")
+        if st.form_submit_button("Add user", type="primary"):
+            try:
+                users.create(username, name, role, pw, created_by=USER["username"])
+                st.toast(f"Added {name}", icon="✅")
+                st.rerun()
+            except ValueError as e:
+                st.error(str(e))
+    st.caption("Grant officers review applications and send decisions. Super admins can also manage rules and users.")
 
 # ---------- router ----------
 if page == "🗂 Audit log":
     audit_log()
+elif page == "⚙️ Rules" and IS_ADMIN:
+    rules_page()
+elif page == "👥 Users" and IS_ADMIN:
+    users_page()
 elif st.query_params.get("app") in RECEIVED:
     detail(st.query_params["app"])
 else:
