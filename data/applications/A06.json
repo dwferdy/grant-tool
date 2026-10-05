@@ -1,0 +1,49 @@
+{
+  "id": "A06",
+  "test_purpose": "Travel cap: travel is 67% of grant (limit 50%). Only R14 should fail. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Indonesian Students Association of Darwin",
+    "type": "student_or_community_group",
+    "abn": null,
+    "nt_based": true,
+    "contact_role": "President (volunteer)",
+    "auspicing_body": {
+      "name": "Darwin Multicultural Community Council Inc.",
+      "abn": "55 444 333 222",
+      "confirmed": true
+    }
+  },
+  "project": {
+    "title": "Kakadu Cultural Weekend",
+    "description": "A two-day trip to Kakadu National Park with a Traditional Owner-led cultural walk, so international students learn about the Territory and its First Nations culture.",
+    "location": "Darwin NT",
+    "start_date": "2024-08-24",
+    "end_date": "2024-08-25",
+    "who_can_attend": "Open to all international students studying in the Northern Territory. Entry is free.",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Coach hire Darwin-Kakadu return",
+      "category": "travel",
+      "amount": 4200
+    },
+    {
+      "item": "Camping ground fees",
+      "category": "travel",
+      "amount": 1800
+    },
+    {
+      "item": "Cultural guide fee",
+      "category": "facilitator_fees",
+      "amount": 1500
+    },
+    {
+      "item": "Group meals",
+      "category": "catering",
+      "amount": 1500
+    }
+  ],
+  "total_requested": 9000
+}

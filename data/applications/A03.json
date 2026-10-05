@@ -1,0 +1,49 @@
+{
+  "id": "A03",
+  "test_purpose": "Insufficient evidence: auspicing body not confirmed, attendance unclear. Should trigger a clarification request, NOT a rejection. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Darwin African Students Network",
+    "type": "student_or_community_group",
+    "abn": null,
+    "nt_based": true,
+    "contact_role": "Coordinator",
+    "auspicing_body": {
+      "name": "We are talking with the university about this",
+      "abn": null,
+      "confirmed": false
+    }
+  },
+  "project": {
+    "title": "Settling In Wellbeing Workshops",
+    "description": "Three evening workshops on managing study stress, budgeting, and finding support services in Darwin. Each workshop ends with a shared meal.",
+    "location": "Darwin NT",
+    "start_date": "2025-02-20",
+    "end_date": "2025-04-17",
+    "who_can_attend": "Students are welcome.",
+    "wellbeing_benefit": "Students learn where to get help and meet others in the same situation."
+  },
+  "budget": [
+    {
+      "item": "Workshop presenter fees (3 sessions)",
+      "category": "facilitator_fees",
+      "amount": 2400
+    },
+    {
+      "item": "Community hall hire",
+      "category": "venue_hire",
+      "amount": 1200
+    },
+    {
+      "item": "Shared meals",
+      "category": "catering",
+      "amount": 1400
+    },
+    {
+      "item": "Printed resource booklets",
+      "category": "materials",
+      "amount": 1000
+    }
+  ],
+  "total_requested": 6000
+}

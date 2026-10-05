@@ -1,0 +1,32 @@
+Dear {{ applicant_name }},
+
+Re: {{ grant }}, {{ round_name }} round
+Project: {{ project_title }} (application {{ application_id }})
+
+{% if outcome == "approve" -%}
+We are pleased to tell you that your application meets the eligibility rules for this grant.
+{%- elif outcome == "reject" -%}
+We have assessed your application and it does not meet some of the eligibility rules for this grant.
+Each reason is listed below with the rule it comes from, so you can check it and tell us if you think we got it wrong.
+{%- elif outcome == "clarify" -%}
+We have assessed your application and need more information before we can make a decision.
+This is not a rejection. Please reply with the information listed below.
+{%- else -%}
+Your application is still being assessed by a grants officer. We will contact you when a decision is made.
+{%- endif %}
+{% for r in reasons %}
+{{ loop.index }}. {{ r.text }}
+   Rule {{ r.rule_id }}: {{ r.source }}
+{%- if r.officer_note %}
+   Officer's note: {{ r.officer_note }}
+{%- endif %}
+{% endfor -%}
+{% if final_note %}
+{{ final_note }}
+{% endif -%}
+{% if outcome in ("reject", "clarify") %}
+If you think any of these reasons is wrong, reply to this letter and quote the rule number. A grants officer, not a computer, will review your response.
+{% endif %}
+Yours sincerely,
+{{ officer }}
+Grants Officer

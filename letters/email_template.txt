@@ -1,0 +1,22 @@
+Subject: Grant application - <your project title>
+
+Applicant name:
+Applicant type: (registered business / education provider / not-for-profit incorporated / student or community group)
+ABN:
+NT based: (yes / no)
+Contact role:
+Auspicing body: (student or community groups only)
+Auspicing body confirmed: (yes / no)
+
+Project title:
+Description:
+Location:
+Start date: (YYYY-MM-DD)
+End date: (YYYY-MM-DD)
+Who can attend:
+Wellbeing benefit:
+
+Budget: (one line each: item | category | amount)
+Categories: travel, facilitator fees, catering, venue hire, equipment hire, materials, marketing, other
+-
+Total requested:

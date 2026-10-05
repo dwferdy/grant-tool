@@ -1,0 +1,19 @@
+{
+  "_readme": "Answer key. 'code': rules expected NOT to be met/not_applicable (every other code rule must be met or not_applicable). 'ai': expected verdicts for AI/officer rules, used later to test ai_checks.py. 'outcome': approve | reject | clarify.",
+  "A01": {"outcome": "approve", "code": {}, "ai": {}},
+  "A02": {"outcome": "reject", "code": {"R16": "not_met"},
+          "ai": {"R07": "not_met", "R17": "not_met", "R18": "not_met", "R22": "not_met"}},
+  "A03": {"outcome": "clarify", "code": {"R03": "insufficient_evidence"}, "ai": {"R07": "insufficient_evidence"}},
+  "A04": {"outcome": "approve", "code": {}, "ai": {}},
+  "A05": {"outcome": "approve", "code": {}, "ai": {}},
+  "A06": {"outcome": "reject", "code": {"R14": "not_met"}, "ai": {}},
+  "A07": {"outcome": "reject", "code": {"R15": "not_met"}, "ai": {}},
+  "A08": {"outcome": "reject", "code": {"R12": "not_met"}, "ai": {}},
+  "A09": {"outcome": "clarify", "code": {"R13": "insufficient_evidence"}, "ai": {}},
+  "A10": {"outcome": "reject", "code": {"R06": "not_met"}, "ai": {}},
+  "A11": {"outcome": "clarify", "code": {"R11": "insufficient_evidence"}, "ai": {"R07": "insufficient_evidence"}},
+  "A12": {"outcome": "clarify", "code": {"R02": "insufficient_evidence"}, "ai": {}},
+  "A13": {"outcome": "approve", "code": {}, "ai": {}},
+  "A14": {"outcome": "officer_decides", "code": {}, "ai": {"R19": "needs_officer_judgement"}},
+  "A15": {"outcome": "officer_decides", "code": {}, "ai": {"R19": "needs_officer_judgement"}}
+}

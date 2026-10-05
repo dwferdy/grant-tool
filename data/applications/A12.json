@@ -1,0 +1,44 @@
+{
+  "id": "A12",
+  "test_purpose": "ABN rule: registered business with no ABN and no auspicing body. Only R02 should fail (insufficient evidence). All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Lens and Light Studio",
+    "type": "registered_business",
+    "abn": null,
+    "nt_based": true,
+    "contact_role": "Owner"
+  },
+  "project": {
+    "title": "Darwin Through Our Eyes",
+    "description": "A free photo-walk series where international students learn phone photography while exploring Darwin waterfront and markets, ending with a public exhibition of their photos.",
+    "location": "Darwin NT",
+    "start_date": "2024-10-06",
+    "end_date": "2024-12-08",
+    "who_can_attend": "Open to all international students studying in the Northern Territory. Entry is free.",
+    "wellbeing_benefit": "Students explore the city, make friends, and the public sees Darwin through students' eyes."
+  },
+  "budget": [
+    {
+      "item": "Photography tutor fees",
+      "category": "facilitator_fees",
+      "amount": 2000
+    },
+    {
+      "item": "Exhibition space hire",
+      "category": "venue_hire",
+      "amount": 1500
+    },
+    {
+      "item": "Photo printing",
+      "category": "materials",
+      "amount": 1200
+    },
+    {
+      "item": "Snacks and water",
+      "category": "catering",
+      "amount": 600
+    }
+  ],
+  "total_requested": 5300
+}

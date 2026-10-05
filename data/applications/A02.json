@@ -1,0 +1,44 @@
+{
+  "id": "A02",
+  "test_purpose": "Rejection: catering over cap, alcohol, portable assets, profit, limited to one provider. Tests the plain-English letter. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Harbourline Events Pty Ltd",
+    "type": "registered_business",
+    "abn": "98 765 432 109",
+    "nt_based": true,
+    "contact_role": "Director"
+  },
+  "project": {
+    "title": "International Student Sunset Networking Cruise",
+    "description": "A three-hour sunset cruise on Darwin Harbour where students can network with local employers. Tickets will be sold to students for $40 each and any surplus will be retained by the company to support future events. A beer and wine package will be served on board.",
+    "location": "Darwin Harbour NT",
+    "start_date": "2024-11-08",
+    "end_date": "2024-11-08",
+    "who_can_attend": "Students enrolled at one Darwin university.",
+    "wellbeing_benefit": "Students can make professional contacts in a relaxed setting."
+  },
+  "budget": [
+    {
+      "item": "Boat charter",
+      "category": "venue_hire",
+      "amount": 4000
+    },
+    {
+      "item": "Canapes and dinner",
+      "category": "catering",
+      "amount": 3000
+    },
+    {
+      "item": "Beer and wine package",
+      "category": "catering",
+      "amount": 1500
+    },
+    {
+      "item": "Two laptops for the registration desk",
+      "category": "equipment_hire",
+      "amount": 1500
+    }
+  ],
+  "total_requested": 10000
+}

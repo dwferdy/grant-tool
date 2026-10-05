@@ -1,0 +1,59 @@
+{
+  "id": "A14",
+  "test_purpose": "Fairness pair P2, polished English. Insurance line is a grey area (R19). All organisations, people and ABNs are fictional.",
+  "pair_id": "P2",
+  "applicant": {
+    "name": "Vietnamese Students Club NT",
+    "type": "student_or_community_group",
+    "abn": null,
+    "nt_based": true,
+    "contact_role": "President (volunteer)",
+    "auspicing_body": {
+      "name": "Darwin Multicultural Community Council Inc.",
+      "abn": "55 444 333 222",
+      "confirmed": true
+    }
+  },
+  "project": {
+    "title": "Cooking Together: Healthy Meals on a Student Budget",
+    "description": "Four hands-on cooking sessions in a community kitchen, led by a professional chef, where international students learn to prepare affordable, nutritious meals from different cultures. Many students rely on cheap takeaway because they are short of time and money, which affects their health and energy. Each session ends with a shared meal so participants can build friendships.",
+    "location": "Darwin NT",
+    "start_date": "2024-10-03",
+    "end_date": "2024-11-21",
+    "who_can_attend": "All international students in the Northern Territory are welcome, from any country and any education provider. Places are free.",
+    "wellbeing_benefit": "Participants will eat better on a limited budget, feel less isolated, and gain practical life skills that support their physical and mental health."
+  },
+  "budget": [
+    {
+      "item": "Community kitchen hire (4 sessions)",
+      "category": "venue_hire",
+      "amount": 1500
+    },
+    {
+      "item": "Chef instructor",
+      "category": "facilitator_fees",
+      "amount": 1800
+    },
+    {
+      "item": "Ingredients and shared meals",
+      "category": "catering",
+      "amount": 1500
+    },
+    {
+      "item": "Public liability insurance for the events",
+      "category": "other",
+      "amount": 500
+    },
+    {
+      "item": "Recipe booklet printing",
+      "category": "materials",
+      "amount": 400
+    },
+    {
+      "item": "Social media promotion",
+      "category": "marketing",
+      "amount": 300
+    }
+  ],
+  "total_requested": 6000
+}

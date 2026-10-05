@@ -1,0 +1,44 @@
+{
+  "id": "A09",
+  "test_purpose": "Budget integrity: lines add to $7,200 but $7,500 requested. Only R13 should fail (insufficient evidence, not rejection). All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Top End Badminton Club Inc.",
+    "type": "nfp_incorporated",
+    "nt_based": true,
+    "contact_role": "Secretary",
+    "abn": "45 333 444 555"
+  },
+  "project": {
+    "title": "Shuttle Social",
+    "description": "Eight free Friday-night badminton social sessions with coaching for beginners, so international students can stay active and meet locals.",
+    "location": "Darwin NT",
+    "start_date": "2024-08-02",
+    "end_date": "2024-09-20",
+    "who_can_attend": "Open to all international students studying in the Northern Territory. Entry is free.",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Court hire (8 nights)",
+      "category": "venue_hire",
+      "amount": 3200
+    },
+    {
+      "item": "Coach fees",
+      "category": "facilitator_fees",
+      "amount": 2400
+    },
+    {
+      "item": "Racquet and shuttle hire",
+      "category": "equipment_hire",
+      "amount": 1000
+    },
+    {
+      "item": "Water and fruit",
+      "category": "catering",
+      "amount": 600
+    }
+  ],
+  "total_requested": 7500
+}

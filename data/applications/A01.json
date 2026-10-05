@@ -1,0 +1,54 @@
+{
+  "id": "A01",
+  "test_purpose": "Clear approval: every rule met. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Top End Pacific and Asian Community Association Inc.",
+    "type": "nfp_incorporated",
+    "abn": "12 345 678 901",
+    "nt_based": true,
+    "contact_role": "Secretary"
+  },
+  "project": {
+    "title": "Top End Multicultural Futsal Cup",
+    "description": "A one-day futsal tournament at Marrara Indoor Stadium for international students. Teams will be mixed, with no more than two players from the same country in each team, so students meet people outside their usual circle. Qualified referees will run the games, and a local employment service will host a stall about part-time work rights for students.",
+    "location": "Marrara, Darwin NT",
+    "start_date": "2024-10-19",
+    "end_date": "2024-10-19",
+    "who_can_attend": "Open to all international students studying in the Northern Territory. Entry is free.",
+    "wellbeing_benefit": "Physical activity, new friendships across nationalities, and practical information about working while studying."
+  },
+  "budget": [
+    {
+      "item": "Indoor court hire (8 hours)",
+      "category": "venue_hire",
+      "amount": 2000
+    },
+    {
+      "item": "Bibs, balls and goal hire",
+      "category": "equipment_hire",
+      "amount": 1500
+    },
+    {
+      "item": "Lunch and non-alcoholic drinks for 120 players",
+      "category": "catering",
+      "amount": 1800
+    },
+    {
+      "item": "Qualified referees (4)",
+      "category": "facilitator_fees",
+      "amount": 1500
+    },
+    {
+      "item": "Posters and social media promotion",
+      "category": "marketing",
+      "amount": 700
+    },
+    {
+      "item": "Participation medals",
+      "category": "materials",
+      "amount": 500
+    }
+  ],
+  "total_requested": 8000
+}

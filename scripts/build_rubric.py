@@ -1,0 +1,94 @@
+import json
+PAGE = "https://nt.gov.au/community/grants-and-volunteers/grants/grants-for-international-student-wellbeing"
+PDF = "https://nt.gov.au/_media/docs/business-and-industry/start,-run-or-close-a-business/business-grants-and-funding/funding-for-economic-development-in-remote-communities/international-student-wellbeing-grant-program-guidelines.pdf"
+def src(section): return {"document": "Grants for international student wellbeing (NT.GOV.AU), 2024-25 round", "section": section, "url": PAGE}
+def R(id, type, method, rule, section, check, evidence, if_missing, reason):
+    return {"id": id, "type": type, "check_method": method, "rule": rule, "source": src(section),
+            "check": check, "evidence_needed": evidence, "if_missing": if_missing,
+            "plain_english_reason": reason, "verified_against_pdf": False}
+rules = [
+ # ---------- Eligibility gates ----------
+ R("R01","eligibility_gate","ai_evidence","Applicant must be a registered business, an international education and training provider, a not-for-profit incorporated organisation, or a student or community group with an auspicing body.","Who can apply",
+   "applicant.type in allowed_applicant_types; AI confirms the description supports the stated type","Applicant type and organisation details","insufficient_evidence",
+   "Only certain types of applicant can receive this grant. We could not confirm that {applicant_name} is one of them. Tell us which type you are (for example, a not-for-profit incorporated association) and give your registration details."),
+ R("R02","eligibility_gate","code","A registered business, company or incorporated association must have an ABN. If it has no ABN, it must show support from an auspicing body.","Who can apply > Registered businesses",
+   "if applicant.type in {registered_business, nfp_incorporated}: applicant.abn present OR auspicing_body.name present","ABN, or auspicing body name","insufficient_evidence",
+   "Your application did not include an ABN or an auspicing body. Please add your ABN, or the name of the organisation that will auspice your grant."),
+ R("R03","eligibility_gate","code","A student or community group must apply with an auspicing body (a not-for-profit organisation that takes legal and financial responsibility for the grant).","Who can apply",
+   "if applicant.type == student_or_community_group: auspicing_body.name present AND auspicing_body.confirmed == true","Named auspicing body and confirmation it has agreed","insufficient_evidence",
+   "Student and community groups need an auspicing body. Your application does not name one that has agreed to take on the grant. Please name the organisation and include its confirmation."),
+ R("R04","eligibility_gate","ai_evidence","The applicant must be in the NT, or (if not registered in the NT) the event must directly benefit international students living in the NT.","Who can apply > Businesses outside of the NT; What can't be funded",
+   "applicant.nt_based == true OR evidence that the activity directly benefits international students living in the NT","Applicant location; where the event happens and who it serves","insufficient_evidence",
+   "This grant is for activities that help international students living in the Northern Territory. We could not confirm this from your application. Tell us where the event will happen and who it is for."),
+ R("R05","eligibility_gate","officer_judgement","The applicant must not have outstanding acquittals or compliance issues with the Department of Trade, Business and Asian Relations (unless Study NT approved a variation or extension).","After you apply",
+   "Officer checks department records. NOT assessed from the application text.","Department acquittal records","needs_officer_judgement",
+   "Our records show an earlier grant from Study NT has not been fully reported on (acquitted). We can consider a new grant once that report is submitted."),
+ R("R06","eligibility_gate","code","Events and activities must take place between 1 July 2024 and 1 June 2025.","Grants for international student wellbeing (intro)",
+   "round.window_start <= project.start_date AND project.end_date <= round.window_end","Event start and end dates","insufficient_evidence",
+   "Events for this round must happen between 1 July 2024 and 1 June 2025. Your event dates ({start_date} to {end_date}) are outside this period."),
+ R("R07","eligibility_gate","ai_evidence","The event must be available to all international students, or to students from at least 3 international education or training providers.","Grants for international student wellbeing (intro)",
+   "AI finds text showing open to all international students OR names >= 3 providers whose students can attend","Who can attend; named providers","insufficient_evidence",
+   "Your event must be open to all international students, or to students from at least three different education providers. Your application does not show this yet. Tell us who can attend, or list the providers whose students are invited."),
+ R("R08","exclusion","code","Activities that started before the application is approved cannot be funded.","What can't be funded",
+   "project.start_date > round.earliest_approval_date","Event start date","insufficient_evidence",
+   "We cannot fund activities that start before a grant is approved. Your activity starts on {start_date}, before the earliest approval date of {earliest_approval_date}."),
+ R("R09","eligibility_gate","officer_judgement","The event or activity must focus on the wellbeing of international students.","What can't be funded",
+   "AI quotes evidence of wellbeing focus; officer decides","Project description; how it supports wellbeing","needs_officer_judgement",
+   "This grant only funds activities focused on the wellbeing of international students. From your application, the main purpose of the activity appears to be {stated_purpose}. If wellbeing is a key goal, please explain how the activity supports it."),
+ R("R10","assessment_criterion","officer_judgement","The event must meet the objectives of the grant: (a) high-quality activities that promote student wellbeing; (b) social connections and belonging to the NT; (c) employment opportunities while studying or post-study; (d) community understanding of the value international students bring to the NT; (e) tools and strategies to manage mental health and physical safety.","Grants for international student wellbeing (intro); What can't be funded",
+   "AI maps applicant text to each objective (a)-(e); officer judges whether objectives are addressed","Description of activity outcomes","needs_officer_judgement",
+   "Your application needs to show how the activity meets at least one of the grant's goals. We could not see a clear link to {objective}. Tell us what participants will gain from the activity."),
+ R("R11","eligibility_gate","code","The application must be complete.","After you apply",
+   "All required fields present and non-empty: applicant.name, applicant.type, project.title, project.description, project.start_date, project.end_date, project.who_can_attend, budget (>=1 line)","All required application fields","insufficient_evidence",
+   "Your application is missing: {missing_fields}. Please add these so we can assess it."),
+ # ---------- Numeric caps (plain code, no AI) ----------
+ R("R12","numeric_cap","code","The grant amount requested must not exceed $10,000.","Grants for international student wellbeing (intro)",
+   "total_requested <= 10000","Total amount requested","insufficient_evidence",
+   "You asked for ${total_requested}. The most this grant can provide is $10,000."),
+ R("R13","integrity_check","code","Budget line items must add up to the total amount requested. (Tool consistency check: not a published rule.)","Tool check (not in guidelines)",
+   "abs(sum(budget.amount) - total_requested) < 0.01","Budget line items and total","insufficient_evidence",
+   "Your budget items add up to ${budget_sum}, but you requested ${total_requested}. Please check your budget so the totals match."),
+ R("R14","numeric_cap","code","Travel costs must not exceed 50% of the total grant.","What can be funded",
+   "sum(budget[category==travel]) <= 0.50 * total_requested","Budget lines for travel","insufficient_evidence",
+   "Your budget asks for ${amount} for travel. The limit is 50% of the grant (${limit})."),
+ R("R15","numeric_cap","code","Facilitator or consultant fees must not exceed 50% of the total grant.","What can be funded",
+   "sum(budget[category==facilitator_fees]) <= 0.50 * total_requested","Budget lines for facilitator or consultant fees","insufficient_evidence",
+   "Your budget asks for ${amount} for facilitators or consultants. The limit is 50% of the grant (${limit})."),
+ R("R16","numeric_cap","code","Catering costs must not exceed 25% of the total grant.","What can be funded",
+   "sum(budget[category==catering]) <= 0.25 * total_requested","Budget lines for catering","insufficient_evidence",
+   "Your budget asks for ${amount} for catering. The limit is 25% of the grant (${limit})."),
+]
+excl = [
+ ("R17","Funding cannot be used to buy portable assets such as a mobile phone or laptop.","Your budget includes {item}. This grant cannot pay for portable items such as phones or laptops. Hiring equipment for the event may be possible instead."),
+ ("R18","Commercial or business activities that make a profit cannot be funded.","Your activity appears to make a profit ({evidence}). This grant cannot fund profit-making activities. If any money raised covers costs only, please explain this."),
+ ("R19","Normal administrative or running costs cannot be funded (such as wages, rent, insurances, legal fees, auditing and finance costs).","Your budget includes {item}, which is a normal running cost. This grant cannot pay for running costs like wages, rent or insurance."),
+ ("R20","Membership fees to professional organisations cannot be funded.","Your budget includes a membership fee ({item}). This grant cannot pay for professional memberships."),
+ ("R21","Costs for fundraising or charitable activities cannot be funded.","Your activity includes fundraising ({evidence}). This grant cannot fund fundraising or charity activities."),
+ ("R22","Funding cannot be used to buy alcohol.","Your budget includes alcohol ({item}). This grant cannot pay for alcohol. Non-alcoholic drinks can be funded under catering."),
+ ("R23","Illegal activities cannot be funded.","Part of your activity may not be legal ({evidence}). We cannot fund this."),
+ ("R24","Costs of preparing the grant application cannot be funded.","Your budget includes the cost of preparing this application ({item}). This cannot be funded."),
+ ("R25","Events or activities that are political cannot be funded.","Your activity appears to be political ({evidence}). This grant cannot fund political events."),
+ ("R26","Events or activities that are discriminatory cannot be funded.","Your activity appears to exclude some people ({evidence}). This grant cannot fund events that are discriminatory."),
+]
+for id, rule, reason in excl:
+    rules.append(R(id,"exclusion","ai_evidence",rule,"What can't be funded",
+        "AI scans budget items and description for this exclusion; any match quotes the exact text","Budget line items; project description",
+        "met", reason))
+rubric = {
+ "rubric_id": "isw-2024-25-v0.1",
+ "grant": "International Student Wellbeing Grant Program (Study NT)",
+ "round": {"name": "2024-25", "window_start": "2024-07-01", "window_end": "2025-06-01",
+           "earliest_approval_date": "2024-06-30",
+           "note": "earliest_approval_date is an ASSUMPTION for the demo; not published."},
+ "allowed_applicant_types": ["registered_business","education_provider","nfp_incorporated","student_or_community_group"],
+ "budget_categories": ["travel","facilitator_fees","catering","venue_hire","equipment_hire","materials","marketing","other"],
+ "verdicts": ["met","not_met","insufficient_evidence","needs_officer_judgement"],
+ "sources": {"primary_web_page": PAGE, "official_pdf": PDF,
+   "attribution": "Northern Territory Government, Northern Territory. 'Grants for international student wellbeing'. Sourced 5 October 2026."},
+ "status": "DRAFT - not locked. A human must check every rule against the official PDF and set verified_against_pdf=true before locking.",
+ "locked": False, "locked_by": None, "locked_at": None,
+ "rules": rules,
+}
+json.dump(rubric, open("data/rubric.json","w"), indent=2)
+from collections import Counter
+print(len(rules), Counter(r["check_method"] for r in rules), Counter(r["type"] for r in rules))

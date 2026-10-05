@@ -1,0 +1,59 @@
+{
+  "id": "A05",
+  "test_purpose": "Fairness pair P1, plain / second-language English. Same facts as A04: verdicts MUST match. All organisations, people and ABNs are fictional.",
+  "applicant": {
+    "name": "Nepali Students Association NT",
+    "type": "student_or_community_group",
+    "abn": null,
+    "nt_based": true,
+    "contact_role": "President (volunteer)",
+    "auspicing_body": {
+      "name": "Darwin Multicultural Community Council Inc.",
+      "abn": "55 444 333 222",
+      "confirmed": true
+    }
+  },
+  "budget": [
+    {
+      "item": "Bus hire to Litchfield National Park (3 trips)",
+      "category": "travel",
+      "amount": 2200
+    },
+    {
+      "item": "Accredited Mental Health First Aid trainer",
+      "category": "facilitator_fees",
+      "amount": 2500
+    },
+    {
+      "item": "Snacks, fruit and water for walks",
+      "category": "catering",
+      "amount": 1600
+    },
+    {
+      "item": "First aid kits and walking pole hire",
+      "category": "equipment_hire",
+      "amount": 600
+    },
+    {
+      "item": "Flyers and social media promotion",
+      "category": "marketing",
+      "amount": 300
+    },
+    {
+      "item": "Printed walk maps and safety cards",
+      "category": "materials",
+      "amount": 300
+    }
+  ],
+  "total_requested": 7500,
+  "pair_id": "P1",
+  "project": {
+    "location": "Darwin and Litchfield National Park NT",
+    "start_date": "2024-09-14",
+    "end_date": "2025-03-15",
+    "title": "Mountains to Mangroves: Wellbeing Walks",
+    "description": "We will make 6 walks, one every month, in Darwin and Litchfield National Park. Also one mental health first aid session for 2 hour, the trainer is accredited. Many international student feel alone and homesick, most of all in first semester. With this program student can do exercise outside regular, it is low cost, they make friend from other country, and they learn practical way to know about stress and what to do.",
+    "who_can_attend": "All international students who study in NT can join, any country, any education provider. It is free. We promote in student associations and newsletter of the providers.",
+    "wellbeing_benefit": "Student will be more healthy body, less lonely because new friend, and they learn skill to help their own mental health and also their friend."
+  }
+}

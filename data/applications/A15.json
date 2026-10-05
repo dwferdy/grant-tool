@@ -1,0 +1,59 @@
+{
+  "id": "A15",
+  "test_purpose": "Fairness pair P2, plain / second-language English. Same facts as A14: verdicts MUST match. All organisations, people and ABNs are fictional.",
+  "pair_id": "P2",
+  "applicant": {
+    "name": "Vietnamese Students Club NT",
+    "type": "student_or_community_group",
+    "abn": null,
+    "nt_based": true,
+    "contact_role": "President (volunteer)",
+    "auspicing_body": {
+      "name": "Darwin Multicultural Community Council Inc.",
+      "abn": "55 444 333 222",
+      "confirmed": true
+    }
+  },
+  "project": {
+    "title": "Cooking Together: Healthy Meals on a Student Budget",
+    "description": "We make 4 cooking session in community kitchen, a professional chef teach. International student learn how to cook cheap and healthy food from many culture. Many student only buy cheap takeaway because no time and no money, this is not good for health and energy. After every session we eat together so student can make friend.",
+    "location": "Darwin NT",
+    "start_date": "2024-10-03",
+    "end_date": "2024-11-21",
+    "who_can_attend": "All international student in NT can come, from any country and any education provider. It is free.",
+    "wellbeing_benefit": "Student can eat more healthy with small money, not feel alone, and learn skill for life that help their body and mind health."
+  },
+  "budget": [
+    {
+      "item": "Community kitchen hire (4 sessions)",
+      "category": "venue_hire",
+      "amount": 1500
+    },
+    {
+      "item": "Chef instructor",
+      "category": "facilitator_fees",
+      "amount": 1800
+    },
+    {
+      "item": "Ingredients and shared meals",
+      "category": "catering",
+      "amount": 1500
+    },
+    {
+      "item": "Public liability insurance for the events",
+      "category": "other",
+      "amount": 500
+    },
+    {
+      "item": "Recipe booklet printing",
+      "category": "materials",
+      "amount": 400
+    },
+    {
+      "item": "Social media promotion",
+      "category": "marketing",
+      "amount": 300
+    }
+  ],
+  "total_requested": 6000
+}

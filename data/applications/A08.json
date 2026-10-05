@@ -1,0 +1,44 @@
+{
+  "id": "A08",
+  "test_purpose": "Grant maximum: requests $12,500 (max $10,000). Only R12 should fail. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Darwin Festival of Nations Inc.",
+    "type": "nfp_incorporated",
+    "nt_based": true,
+    "contact_role": "Secretary",
+    "abn": "34 222 333 444"
+  },
+  "project": {
+    "title": "Festival of Nations Student Stage",
+    "description": "A student stage at a community festival where international student groups perform music and dance from their home countries for the Darwin public.",
+    "location": "Darwin NT",
+    "start_date": "2024-11-16",
+    "end_date": "2024-11-17",
+    "who_can_attend": "Open to all international students studying in the Northern Territory. Entry is free.",
+    "wellbeing_benefit": "Students share their culture and the community learns about the value international students bring to the NT."
+  },
+  "budget": [
+    {
+      "item": "Stage and sound hire",
+      "category": "equipment_hire",
+      "amount": 6000
+    },
+    {
+      "item": "Marquee hire",
+      "category": "venue_hire",
+      "amount": 3000
+    },
+    {
+      "item": "Performer meals",
+      "category": "catering",
+      "amount": 2000
+    },
+    {
+      "item": "Promotion",
+      "category": "marketing",
+      "amount": 1500
+    }
+  ],
+  "total_requested": 12500
+}

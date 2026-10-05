@@ -1,0 +1,44 @@
+{
+  "id": "A10",
+  "test_purpose": "Date window: event in July 2025, after the round closes (1 June 2025). Only R06 should fail. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "NT Multicultural Youth Network Inc.",
+    "type": "nfp_incorporated",
+    "nt_based": true,
+    "contact_role": "Secretary",
+    "abn": "56 444 555 666"
+  },
+  "project": {
+    "title": "Dry Season Welcome Picnic",
+    "description": "A picnic and games afternoon at East Point Reserve to welcome new international students arriving for second semester.",
+    "location": "Darwin NT",
+    "start_date": "2025-07-12",
+    "end_date": "2025-07-12",
+    "who_can_attend": "Open to all international students studying in the Northern Territory. Entry is free.",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Park booking and marquee",
+      "category": "venue_hire",
+      "amount": 900
+    },
+    {
+      "item": "Picnic food and drinks",
+      "category": "catering",
+      "amount": 700
+    },
+    {
+      "item": "Games equipment hire",
+      "category": "equipment_hire",
+      "amount": 900
+    },
+    {
+      "item": "Flyers",
+      "category": "marketing",
+      "amount": 500
+    }
+  ],
+  "total_requested": 3000
+}

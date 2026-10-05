@@ -1,0 +1,44 @@
+{
+  "id": "A11",
+  "test_purpose": "Completeness: 'who_can_attend' left blank. R11 insufficient evidence; AI rule R07 should also be insufficient evidence. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Darwin Filipino Students Circle Inc.",
+    "type": "nfp_incorporated",
+    "nt_based": true,
+    "contact_role": "Secretary",
+    "abn": "67 555 666 777"
+  },
+  "project": {
+    "title": "Kamustahan Wellbeing Nights",
+    "description": "Monthly evening catch-ups with a guest speaker on mental health, budgeting, or staying safe at night in Darwin.",
+    "location": "Darwin NT",
+    "start_date": "2024-09-12",
+    "end_date": "2025-02-13",
+    "who_can_attend": "",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Guest speaker fees",
+      "category": "facilitator_fees",
+      "amount": 1800
+    },
+    {
+      "item": "Hall hire",
+      "category": "venue_hire",
+      "amount": 1500
+    },
+    {
+      "item": "Dinner",
+      "category": "catering",
+      "amount": 1000
+    },
+    {
+      "item": "Safety info cards",
+      "category": "materials",
+      "amount": 400
+    }
+  ],
+  "total_requested": 4700
+}

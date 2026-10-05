@@ -1,0 +1,59 @@
+{
+  "id": "A04",
+  "test_purpose": "Fairness pair P1, polished English. All organisations, people and ABNs are fictional.",
+  "applicant": {
+    "name": "Nepali Students Association NT",
+    "type": "student_or_community_group",
+    "abn": null,
+    "nt_based": true,
+    "contact_role": "President (volunteer)",
+    "auspicing_body": {
+      "name": "Darwin Multicultural Community Council Inc.",
+      "abn": "55 444 333 222",
+      "confirmed": true
+    }
+  },
+  "budget": [
+    {
+      "item": "Bus hire to Litchfield National Park (3 trips)",
+      "category": "travel",
+      "amount": 2200
+    },
+    {
+      "item": "Accredited Mental Health First Aid trainer",
+      "category": "facilitator_fees",
+      "amount": 2500
+    },
+    {
+      "item": "Snacks, fruit and water for walks",
+      "category": "catering",
+      "amount": 1600
+    },
+    {
+      "item": "First aid kits and walking pole hire",
+      "category": "equipment_hire",
+      "amount": 600
+    },
+    {
+      "item": "Flyers and social media promotion",
+      "category": "marketing",
+      "amount": 300
+    },
+    {
+      "item": "Printed walk maps and safety cards",
+      "category": "materials",
+      "amount": 300
+    }
+  ],
+  "total_requested": 7500,
+  "pair_id": "P1",
+  "project": {
+    "location": "Darwin and Litchfield National Park NT",
+    "start_date": "2024-09-14",
+    "end_date": "2025-03-15",
+    "title": "Mountains to Mangroves: Wellbeing Walks",
+    "description": "Mountains to Mangroves is a series of six monthly guided walks around Darwin and Litchfield National Park, combined with a two-hour Mental Health First Aid awareness session delivered by an accredited trainer. Many international students experience isolation and homesickness, particularly during their first semester. The program will provide regular, low-cost opportunities to exercise outdoors, build friendships across nationalities, and learn practical strategies for recognising and responding to stress.",
+    "who_can_attend": "All international students studying in the Northern Territory are welcome, regardless of nationality or education provider. Participation is free and will be promoted through student associations and provider newsletters.",
+    "wellbeing_benefit": "Participants will improve their physical health, reduce loneliness through new friendships, and gain practical skills to support their own mental health and that of their peers."
+  }
+}

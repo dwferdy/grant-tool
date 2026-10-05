@@ -1,0 +1,44 @@
+{
+  "id": "A07",
+  "test_purpose": "Facilitator cap: consultant fees are 69% of grant (limit 50%). Only R15 should fail. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Arafura College of English",
+    "type": "education_provider",
+    "abn": "23 111 222 333",
+    "nt_based": true,
+    "contact_role": "Student Services Manager"
+  },
+  "project": {
+    "title": "Get Job Ready NT",
+    "description": "Four practical workshops on writing an Australian-style resume, interview practice, and understanding work rights, delivered by a recruitment consultant.",
+    "location": "Darwin NT",
+    "start_date": "2024-09-05",
+    "end_date": "2024-10-24",
+    "who_can_attend": "Open to all international students in the NT, from any provider.",
+    "wellbeing_benefit": "Better employment skills and confidence while studying and after graduation."
+  },
+  "budget": [
+    {
+      "item": "Recruitment consultant (4 workshops)",
+      "category": "facilitator_fees",
+      "amount": 5500
+    },
+    {
+      "item": "Room hire",
+      "category": "venue_hire",
+      "amount": 1200
+    },
+    {
+      "item": "Light refreshments",
+      "category": "catering",
+      "amount": 800
+    },
+    {
+      "item": "Workbooks",
+      "category": "materials",
+      "amount": 500
+    }
+  ],
+  "total_requested": 8000
+}
