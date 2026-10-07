@@ -130,7 +130,7 @@ def ai_suggestion(aid: str) -> str:
 
 def receive(aid: str) -> None:
     audit.receive(aid)
-    if api_available() and cached_cells(APPS[aid], RB) is None:
+    if aid in APPS and api_available() and cached_cells(APPS[aid], RB) is None:
         with st.spinner(f"AI is reviewing {APPS[aid].applicant.name}…"):
             try:
                 st.session_state.cells[aid] = assess(APPS[aid], RB, call_api=True)
@@ -175,17 +175,26 @@ with st.sidebar:
 
 # ---------- email ----------
 def show_intake(results):
+    # APPS was loaded before these emails were parsed: pick up the applications just saved to data/received/.
+    APPS.update(intake.load_received())
+    in_inbox = set(audit.received())
+    added = 0
     for r in results:
         if r.application_id and r.problems == ["Already received."]:
+            # Seen before. If it never reached the inbox (e.g. an earlier upload crashed half-way), add it now.
+            if r.application_id in APPS and r.application_id not in in_inbox:
+                receive(r.application_id)
+                added += 1
+                st.toast(f"Recovered application from {r.sender}", icon="📩")
             continue
         if r.application_id:
             receive(r.application_id)
+            added += 1
             st.toast(f"New application from {r.sender}", icon="📩")
         else:
             st.toast(f"Couldn't read the email from {r.sender}", icon="⚠️")
-    new = [r for r in results if r.problems != ["Already received."]]
-    if not new:
-        st.toast("No new emails.", icon="📭")
+    if not added and all(r.problems == ["Already received."] for r in results):
+        st.toast("Already in your inbox — nothing new.", icon="📭")
 
 def mail_box():
     c1, c2 = st.columns([1, 2], vertical_alignment="bottom")
@@ -201,8 +210,16 @@ def mail_box():
     up = c2.file_uploader("Or drop an email file (.eml)", type=["eml"], accept_multiple_files=True,
                           key=f"eml_{st.session_state.get('eml_n', 0)}")
     if up:
-        show_intake([intake.ingest(f.getvalue()) for f in up])
-        st.session_state.eml_n = st.session_state.get("eml_n", 0) + 1   # clear the uploader
+        results = []
+        for f in up:
+            try:
+                results.append(intake.ingest(f.getvalue()))
+            except Exception as e:   # one bad file must not block the others
+                st.toast(f"Couldn't open {f.name}: {e}", icon="⚠️")
+        try:
+            show_intake(results)
+        finally:
+            st.session_state.eml_n = st.session_state.get("eml_n", 0) + 1   # always clear the uploader
         st.rerun()
     if not configured:
         st.caption("📭 Mailbox not connected yet. See **Connect a mailbox** below, or test with the sample "
