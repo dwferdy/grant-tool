@@ -4,3 +4,5 @@ anthropic
 streamlit
 jinja2
 python-dotenv
+pypdf
+reportlab  # only needed to rebuild the PDF form: scripts/build_application_form.py

@@ -7,7 +7,7 @@ Grant used: **International Student Wellbeing Grant Program (Study NT), 2024-25 
 ## Run
 ```
 pip install -r requirements.txt
-python -m pytest -q          # 111 tests should pass
+python -m pytest -q          # 147 tests should pass
 ```
 Two versions, both at http://localhost:8501:
 
@@ -92,4 +92,6 @@ Known limit: R08 (started before approval) can't fail on its own, because any st
 Northern Territory Government, Northern Territory. "Grants for international student wellbeing". https://nt.gov.au/community/grants-and-volunteers/grants/grants-for-international-student-wellbeing. Sourced 5 October 2026.
 
 ## Email intake
-Applications can arrive by email. Applicants paste `letters/email_template.txt` into the email body (subject contains "Grant application"). In the inbox: **📬 Check mail** reads an IMAP mailbox (settings in `engine/intake.py` docstring; Gmail needs an App Password), or drop `.eml` files onto the uploader. Try it with `data/sample_emails/`. Parsed applications are saved to `data/received/` (git-ignored: real personal data). Emails that can't be read are listed with the reasons so the officer can reply.
+Applications can arrive by email. In the inbox, **📝 Application form** offers a **fillable PDF** (`letters/application_form.pdf`) and a filled-in example to share with applicants. They type into the boxes, pick from drop-down lists, save, and email the PDF as an attachment with "Grant application" in the subject; the app reads the form fields directly. A filled PDF can also be dropped straight into the inbox. Rebuild the PDFs with `python scripts/build_application_form.py` (field names are shared with `engine/intake.py`). The older plain-text form in the email body still works. In the inbox: **🔌 Connect Gmail or Outlook** walks a super admin through connecting a mailbox (Gmail: App Password, tested before saving; Outlook/Microsoft 365 no longer allow password logins, so the app explains how to forward to Gmail), then **📬 Check mail** reads it, or drop `.eml` files onto the uploader. Try it with `data/sample_emails/`. Parsed applications are saved to `data/received/` (git-ignored: real personal data). Emails that can't be read are listed with the reasons so the officer can reply, or dismiss them; they are tried again on the next **Check mail**, so an email becomes an application once the parser understands it. The text parser also accepts headings without colons (as copied from the app's application view) and cost types written at the end of a budget line.
+
+**PDF test set** (`data/sample_forms/`, built by `python scripts/build_sample_forms.py` from the 10 dummy text emails D01–D10): for every case a filled `Dxx_*.pdf` to drop straight into the inbox, and a `Dxx_*.eml` with that PDF attached (what a real applicant sends). `expected_results.csv` is the answer key (4 approve, 3 reject, 2 clarify, 1 officer decides); `tests/test_sample_forms.py` checks both routes reach it in offline mode.

@@ -27,6 +27,7 @@ def _conn():
         action TEXT, rule_json TEXT, changed_by TEXT, changed_at TEXT)""")
     c.execute("""CREATE TABLE IF NOT EXISTS mail (message_id TEXT PRIMARY KEY, sender TEXT, subject TEXT,
         application_id TEXT, problems TEXT, body TEXT, fetched_at TEXT)""")
+    c.execute("CREATE TABLE IF NOT EXISTS mail_dismissed (message_id TEXT PRIMARY KEY, dismissed_at TEXT)")
     c.execute("""CREATE TABLE IF NOT EXISTS final_decisions (
         id INTEGER PRIMARY KEY AUTOINCREMENT, application_id TEXT, outcome TEXT, suggested_outcome TEXT,
         officer_note TEXT, letter TEXT, officer TEXT, decided_at TEXT)""")
@@ -49,7 +50,7 @@ def received() -> dict[str, datetime]:
 def reset_demo() -> None:
     """Empty the inbox, all decisions and the email log (demo only). Emails can be fetched again afterwards."""
     with _conn() as c:
-        for t in ("inbox", "decisions", "final_decisions", "mail"):
+        for t in ("inbox", "decisions", "final_decisions", "mail", "mail_dismissed"):
             c.execute(f"DELETE FROM {t}")
     for p in (ROOT / "data/received").glob("E*.*"):
         p.unlink()
@@ -66,8 +67,17 @@ def record_mail(message_id: str, sender: str, subject: str, application_id: Opti
                   (message_id, sender, subject, application_id, "\n".join(problems), body, datetime.now().isoformat()))
 
 def unreadable_mail() -> list[dict]:
-    """Emails that could not be turned into an application, newest first."""
-    return _rows("SELECT * FROM mail WHERE application_id IS NULL ORDER BY fetched_at DESC")
+    """Emails that could not be turned into an application and weren't dismissed, newest first."""
+    return _rows("SELECT * FROM mail WHERE application_id IS NULL"
+                 " AND message_id NOT IN (SELECT message_id FROM mail_dismissed) ORDER BY fetched_at DESC")
+
+def mail_dismissed(message_id: str) -> bool:
+    return bool(_rows("SELECT 1 FROM mail_dismissed WHERE message_id = ?", (message_id,)))
+
+def dismiss_mail(message_id: str) -> None:
+    """Hide an unreadable email from the warning list (it is still never read twice)."""
+    with _conn() as c:
+        c.execute("INSERT OR IGNORE INTO mail_dismissed VALUES (?, ?)", (message_id, datetime.now().isoformat()))
 
 # ---------- rule decisions ----------
 def record(d: OfficerDecision) -> None:

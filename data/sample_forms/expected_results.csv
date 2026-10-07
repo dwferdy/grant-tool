@@ -1,0 +1,11 @@
+id,pdf,email_with_pdf,scenario,expected_outcome,rules_flagged
+D01,D01_afrobeats_dance_workshops.pdf,D01_afrobeats_dance_workshops.eml,Clean application,approve,
+D02,D02_bushwalk_and_talk.pdf,D02_bushwalk_and_talk.eml,Plain second-language English; travel 36%,approve,
+D03,D03_resume_and_wellbeing_day.pdf,D03_resume_and_wellbeing_day.eml,"Education provider, catering 20%",approve,
+D04,D04_futsal_friday.pdf,D04_futsal_friday.eml,Student group with confirmed auspice,approve,
+D05,D05_end_of_semester_pub_crawl.pdf,D05_end_of_semester_pub_crawl.eml,Alcohol -> R22,reject,R22 not_met
+D06,D06_pongal_harvest_festival.pdf,D06_pongal_harvest_festival.eml,Catering 50% (cap 25%) -> R16,reject,R16 not_met
+D07,D07_kakadu_weekend.pdf,D07_kakadu_weekend.eml,Travel 78% (cap 50%) -> R14,reject,R14 not_met
+D08,D08_winter_tea_evenings.pdf,D08_winter_tea_evenings.eml,Student group with no auspicing body -> R03,clarify,R03 insufficient_evidence
+D09,D09_anime_film_night.pdf,D09_anime_film_night.eml,"Budget adds to $2,300 but asks $2,800 -> R13",clarify,R13 insufficient_evidence
+D10,D10_community_cricket_day.pdf,D10_community_cricket_day.eml,Insurance cost: grey area -> R19 officer,officer_decides,R19 needs_officer_judgement

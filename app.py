@@ -4,6 +4,7 @@ Flow: application arrives -> AI + code review it -> officer checks only the flag
 """
 from __future__ import annotations
 import html, re, time
+from urllib.parse import quote
 from datetime import datetime
 import pandas as pd
 import streamlit as st
@@ -12,7 +13,7 @@ from engine.models import Verdict, OfficerDecision
 from engine.assess import assess, outcome
 from engine.ai_checks import api_available, cached_cells, offline_mode, MODEL
 from engine.letters import render_letter
-from engine import audit, intake, users, rules_admin, ai_settings
+from engine import audit, intake, users, rules_admin, ai_settings, mail_settings
 from engine.rules_admin import TEMPLATES, REQUIRED_FIELDS
 import ui
 
@@ -180,6 +181,8 @@ def show_intake(results):
     in_inbox = set(audit.received())
     added = 0
     for r in results:
+        if not r.application_id and r.problems == ["Already received."]:
+            continue    # an unreadable email we already listed (or the officer dismissed): don't warn again
         if r.application_id and r.problems == ["Already received."]:
             # Seen before. If it never reached the inbox (e.g. an earlier upload crashed half-way), add it now.
             if r.application_id in APPS and r.application_id not in in_inbox:
@@ -199,21 +202,25 @@ def show_intake(results):
 def mail_box():
     c1, c2 = st.columns([1, 2], vertical_alignment="bottom")
     configured = intake.mail_configured()
-    if c1.button("📬 Check mail", type="primary", width="stretch", disabled=not configured,
-                 help=None if configured else "Set MAIL_IMAP_HOST, MAIL_USER and MAIL_PASSWORD in .env"):
+    if not configured:
+        c1.button("🔌 Connect Gmail or Outlook", width="stretch", on_click=lambda: st.session_state.update(connect_open=True))
+    elif c1.button("📬 Check mail", type="primary", width="stretch",
+                   help=f"Reads emails to {mail_settings.current()['MAIL_USER']} whose subject contains "
+                        f"“{mail_settings.subject()}”. Never deletes them or marks them as read."):
         try:
             with st.spinner("Checking the mailbox…"):
                 show_intake(intake.check_mailbox())
             st.rerun()
         except Exception as e:
             st.error(f"Could not read the mailbox: {e}")
-    up = c2.file_uploader("Or drop an email file (.eml)", type=["eml"], accept_multiple_files=True,
+    up = c2.file_uploader("Or drop emails (.eml) or filled forms (.pdf)", type=["eml", "pdf"], accept_multiple_files=True,
                           key=f"eml_{st.session_state.get('eml_n', 0)}")
     if up:
         results = []
         for f in up:
             try:
-                results.append(intake.ingest(f.getvalue()))
+                is_pdf = f.name.lower().endswith(".pdf")
+                results.append(intake.ingest_pdf(f.getvalue(), f.name) if is_pdf else intake.ingest(f.getvalue()))
             except Exception as e:   # one bad file must not block the others
                 st.toast(f"Couldn't open {f.name}: {e}", icon="⚠️")
         try:
@@ -221,32 +228,127 @@ def mail_box():
         finally:
             st.session_state.eml_n = st.session_state.get("eml_n", 0) + 1   # always clear the uploader
         st.rerun()
-    if not configured:
-        st.caption("📭 Mailbox not connected yet. See **Connect a mailbox** below, or test with the sample "
-                   "emails in `data/sample_emails/`.")
+    if configured:
+        st.caption(f"📬 Connected to **{html.escape(mail_settings.current()['MAIL_USER'])}** · reads emails with "
+                   f"“{html.escape(mail_settings.subject())}” in the subject.")
+    else:
+        st.caption("📭 No mailbox connected yet. Connect one below, or drop `.eml` files (try `data/sample_emails/`).")
     bad = audit.unreadable_mail()
     if bad:
-        with st.expander(f"⚠️ {len(bad)} email(s) we couldn't turn into an application — reply to the sender"):
+        with st.expander(f"📭 {len(bad)} email(s) without an application form"):
+            if len(bad) > 1 and st.button("Dismiss all", key="dismiss_all_mail"):
+                for m in bad:
+                    audit.dismiss_mail(m["message_id"])
+                st.rerun()
             for i, m in enumerate(bad):
                 with st.container(border=True, key=f"card_mail_{i}"):
-                    st.markdown(f"**{html.escape(m['sender'])}** · {html.escape(m['subject'])}")
+                    c1, c2 = st.columns([5, 1], vertical_alignment="center")
+                    c1.markdown(f"**{html.escape(m['sender'])}** · {html.escape(m['subject'])}")
+                    if c2.button("Dismiss", key=f"dismiss_mail_{i}", width="stretch",
+                                 help="Hide this email. It won't be read again."):
+                        audit.dismiss_mail(m["message_id"])
+                        st.rerun()
                     st.markdown("\n".join(f"- {p}" for p in m["problems"].splitlines()))
-                    st.code(m["body"], language=None)
-    with st.expander("📝 Template applicants should use"):
-        st.caption("Applicants paste this into the email body. Subject must contain “Grant application”.")
-        st.code(intake.TEMPLATE.read_text(), language=None)
-    if not configured:
-        with st.expander("🔌 Connect a mailbox"):
-            st.markdown("""Add these lines to `.env` and restart the app:
-```
-MAIL_IMAP_HOST=imap.gmail.com
-MAIL_USER=you@gmail.com
-MAIL_PASSWORD=your-16-character-app-password
-MAIL_SUBJECT=Grant application
-```
-**Gmail:** turn on 2-Step Verification, then create an App Password at
-https://myaccount.google.com/apppasswords (your normal password will not work).
-The app only *reads* emails whose subject contains `MAIL_SUBJECT`; it never deletes or marks them as read.""")
+                    with st.popover("Show the email"):
+                        st.code(m["body"], language=None)
+    with st.expander("📝 Application form — share with applicants"):
+        application_form()
+    label = "🔌 Mailbox settings" if configured else "🔌 Connect a mailbox (Gmail or Outlook)"
+    # Keep the flag (don't pop it): if `expanded` changes between reruns, Streamlit rebuilds the expander closed,
+    # so every click inside the wizard would collapse it.
+    with st.expander(label, expanded=st.session_state.get("connect_open", False)):
+        mailbox_settings(configured)
+
+def application_form():
+    """Everything an applicant needs: a fillable PDF form, a filled-in example, and a ready-made email."""
+    to = mail_settings.current()["MAIL_USER"] if intake.mail_configured() else ""
+    subject = f"{mail_settings.subject()} - "
+    body = ("Hello,\n\nPlease find our completed grant application form attached.\n\n"
+            "Event name:\nOrganisation:\n\nKind regards,\n")
+    mailto = f"mailto:{quote(to)}?subject={quote(subject)}&body={quote(body)}"
+
+    ui.step(1, "Download the form", "A PDF applicants can fill in on screen: in Adobe Reader, Preview on a Mac, "
+            "or straight in Chrome or Edge. No printing, no special software.")
+    a, b, _ = st.columns([1.2, 1.2, 1])
+    a.download_button("⬇ Application form (PDF)", intake.PDF_FORM.read_bytes(), file_name="grant-application-form.pdf",
+                      mime="application/pdf", type="primary", width="stretch")
+    b.download_button("⬇ Filled-in example (PDF)", intake.PDF_FORM_EXAMPLE.read_bytes(),
+                      file_name="grant-application-example.pdf", mime="application/pdf", width="stretch")
+    ui.step(2, "Fill it in and save", "Type in the boxes and pick from the lists. Then File → Save.")
+    ui.step(3, "Email it as an attachment", f"Send it{' to <b>' + html.escape(to) + '</b>' if to else ''} with "
+            f"“{html.escape(mail_settings.subject())}” in the subject. <b>Check mail</b> reads the form automatically.")
+    st.link_button("✉️ Start the email", mailto)
+    st.caption("Got a filled form some other way (USB, chat, a shared drive)? Drop the PDF into the box above.")
+
+def mailbox_settings(configured: bool):
+    if flash := st.session_state.pop("mail_flash", None):
+        st.success(flash)
+    if not IS_ADMIN:
+        st.info("Ask a super admin to connect the mailbox.")
+        return
+    cfg = mail_settings.current()
+    if configured:
+        st.markdown(f"{ui.pill('Connected', 'green')} &nbsp; **{html.escape(cfg['MAIL_USER'])}** "
+                    f"<small style='color:#667085'>· {html.escape(cfg['MAIL_IMAP_HOST'])} · folder "
+                    f"{html.escape(cfg['MAIL_FOLDER'] or 'INBOX')}</small>", unsafe_allow_html=True)
+        a, b, _ = st.columns([1, 1, 2])
+        if a.button("Test connection", width="stretch"):
+            with st.spinner("Connecting…"):
+                res = mail_settings.test_connection(cfg["MAIL_IMAP_HOST"], cfg["MAIL_USER"], cfg["MAIL_PASSWORD"],
+                                                    cfg["MAIL_FOLDER"] or "INBOX", mail_settings.subject())
+            (st.success if res.ok else st.error)(res.message)
+        if b.button("Disconnect", width="stretch"):
+            mail_settings.disconnect()
+            st.session_state.mail_flash = "Mailbox disconnected. The password was removed from this computer."
+            st.session_state.connect_open = True
+            st.rerun()
+        return
+
+    provider = st.segmented_control("Where do grant applications arrive?", ["Gmail", "Outlook / Hotmail", "Other (IMAP)"],
+                                    default="Gmail", key="mail_provider")
+    if provider == "Outlook / Hotmail":
+        st.warning("**Microsoft doesn't let email apps sign in with a password any more** (since September 2024, "
+                   "for Outlook.com, Hotmail and Microsoft 365). So this tool can't connect to Outlook directly.")
+        st.markdown("**Easiest way: forward them to Gmail**")
+        ui.step(1, "Connect a Gmail address here", "Choose <b>Gmail</b> above and follow the two steps. "
+                "A free Gmail account just for grant applications works well.")
+        ui.step(2, "Add a forwarding rule in Outlook",
+                f"Outlook → Settings → Mail → <b>Rules</b> → <b>Add new rule</b>. Condition: <i>Subject includes</i> "
+                f"“{html.escape(mail_settings.subject())}”. Action: <i>Forward to</i> your Gmail address.")
+        st.link_button("Open Outlook rules ↗", mail_settings.OUTLOOK_RULES_URL)
+        ui.step(3, "Done", "New applications sent to Outlook arrive in Gmail, and <b>Check mail</b> picks them up.")
+        st.caption("Just a few emails? Open each one in Outlook on the web → ⋯ → Download, and drop the .eml file above.")
+        return
+
+    gmail = provider != "Other (IMAP)"
+    if gmail:
+        ui.step(1, "Turn on 2-Step Verification", "Google only gives App Passwords to accounts with 2-Step Verification on.")
+        st.link_button("Open 2-Step Verification ↗", mail_settings.GMAIL_2SV_URL)
+        ui.step(2, "Create an App Password", "Name it “Grant Inbox” and copy the 16-character password Google shows "
+                "(spaces are fine). Your normal Gmail password won't work.")
+        st.link_button("Create App Password ↗", mail_settings.GMAIL_APP_PASSWORDS_URL)
+        ui.step(3, "Paste it here and connect", "We test the login first. The app only <b>reads</b> matching emails: "
+                "it never deletes them or marks them as read.")
+        host = mail_settings.GMAIL_HOST
+    else:
+        host = st.text_input("IMAP server", placeholder="imap.example.com")
+    with st.form("connect_mail", border=False):
+        user = st.text_input("Email address", value=cfg["MAIL_USER"], placeholder="grants@gmail.com")
+        pw = st.text_input("App Password" if gmail else "Password", type="password",
+                           placeholder="abcd efgh ijkl mnop" if gmail else "")
+        with st.expander("Advanced"):
+            folder = st.text_input("Folder", value=cfg["MAIL_FOLDER"] or "INBOX")
+            subj = st.text_input("Only read emails whose subject contains", value=mail_settings.subject())
+        if st.form_submit_button("Test & connect", type="primary"):
+            with st.spinner("Connecting…"):
+                res = mail_settings.test_connection(host, user, pw, folder, subj)
+            if res.ok:
+                mail_settings.save(host, user, pw, folder, subj)
+                st.session_state.mail_flash = res.message + " Click **Check mail** to bring them in."
+                st.session_state.connect_open = True
+                st.rerun()
+            else:
+                st.error(res.message)
 
 # ---------- inbox ----------
 def inbox():
@@ -436,6 +538,8 @@ def detail(aid: str):
             t1, t2 = st.tabs(["As read by the system", "Original email"])
             t1.markdown(message_html(aid, show_quotes=not blind), unsafe_allow_html=True)
             t2.code(original, language=None)
+            if pdf := intake.original_pdf(aid):
+                t2.download_button("⬇ Applicant's PDF form", pdf, file_name=f"{aid}-application.pdf", mime="application/pdf")
         else:
             st.markdown(message_html(aid, show_quotes=not blind), unsafe_allow_html=True)
         if not blind:

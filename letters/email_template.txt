@@ -1,22 +1,68 @@
-Subject: Grant application - <your project title>
+GRANT APPLICATION FORM - International Student Wellbeing Grant
+
+HOW TO APPLY
+1. Write your answer after each colon ( : ).
+2. Lines starting with # are help. You can leave them or delete them.
+3. Paste everything into the body of an email.
+   Email subject: Grant application - (your event name)
+
+==================== ABOUT YOU ====================
 
 Applicant name:
-Applicant type: (registered business / education provider / not-for-profit incorporated / student or community group)
+# Your organisation or group. Example: Darwin Nepali Students Association
+
+Applicant type:
+# Write ONE of: not-for-profit / student group / education provider / business
+
 ABN:
-NT based: (yes / no)
+# 11 digits. A student group without an ABN can leave this empty.
+
+NT based:
+# yes or no - is your organisation in the Northern Territory?
+
 Contact role:
-Auspicing body: (student or community groups only)
-Auspicing body confirmed: (yes / no)
+# Your role. Example: President
+
+Auspicing body:
+# STUDENT GROUPS ONLY: the not-for-profit organisation supporting you. Everyone else: leave empty.
+
+Auspicing body confirmed:
+# yes or no - has that organisation agreed in writing?
+
+==================== YOUR EVENT ====================
 
 Project title:
-Description:
-Location:
-Start date: (YYYY-MM-DD)
-End date: (YYYY-MM-DD)
-Who can attend:
-Wellbeing benefit:
+# Example: Top End Multicultural Futsal Cup
 
-Budget: (one line each: item | category | amount)
-Categories: travel, facilitator fees, catering, venue hire, equipment hire, materials, marketing, other
+Description:
+# What will happen and why. A few sentences in your own words is fine.
+
+Location:
+# Example: Marrara, Darwin NT
+
+Start date:
+# Example: 19/10/2024
+
+End date:
+# Example: 19/10/2024 (same as start date for a one-day event)
+
+Who can attend:
+# Example: All international students in the NT. Entry is free.
+
+Wellbeing benefit:
+# How will this help students feel better, healthier or more connected?
+
+==================== BUDGET ====================
+
+Budget:
+# One line per cost: what it is, the type of cost, the amount. Example:
+#   - Hall hire, venue hire, $2000
+#   - Lunch for 100 students, catering, $1500
+# Types of cost: travel, facilitator fees, catering, venue hire,
+#                equipment hire, materials, marketing, other
 -
+-
+-
+
 Total requested:
+# The total in dollars. Leave empty and we add up your budget lines.

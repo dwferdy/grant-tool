@@ -36,7 +36,7 @@ def key_hint() -> str:
     return f"{k[:7]}…{k[-4:]}" if len(k) > 12 else ("set" if k else "")
 
 
-def _write_env(name: str, value: str | None) -> None:
+def write_env(name: str, value: str | None) -> None:
     """Set (or remove, when value is None) one variable in .env, keeping comments and other lines."""
     lines = ENV_PATH.read_text().splitlines() if ENV_PATH.exists() else []
     out, done = [], False
@@ -55,19 +55,19 @@ def _write_env(name: str, value: str | None) -> None:
 
 def set_mode(new_mode: str) -> None:
     value = "offline" if new_mode == "offline" else "claude"
-    _write_env("AI_MODE", value)
+    write_env("AI_MODE", value)
     os.environ["AI_MODE"] = value
 
 
 def save_api_key(key: str) -> None:
-    _write_env("ANTHROPIC_API_KEY", key)
+    write_env("ANTHROPIC_API_KEY", key)
     os.environ["ANTHROPIC_API_KEY"] = key
     os.environ.pop("ANTHROPIC_AUTH_TOKEN", None)
 
 
 def remove_api_key() -> None:
     for v in KEY_VARS:
-        _write_env(v, None)
+        write_env(v, None)
         os.environ.pop(v, None)
 
 
