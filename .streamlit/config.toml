@@ -1,0 +1,24 @@
+# SaaS dashboard look (inspired by FlourishON): purple accent, soft grey-blue canvas,
+# white sidebar and cards, Inter type, rounded corners.
+
+[client]
+# Hide the "Deploy" button and developer menu items.
+toolbarMode = "minimal"
+
+[theme]
+base = "light"
+primaryColor = "#7F56D9"
+backgroundColor = "#F5F6FA"
+secondaryBackgroundColor = "#F9FAFB"
+textColor = "#101828"
+linkColor = "#6941C6"
+borderColor = "#E4E7EC"
+showWidgetBorder = true
+baseRadius = "0.75rem"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFontWeights = [700, 600]
+
+[theme.sidebar]
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F9FAFB"
+borderColor = "#EAECF0"

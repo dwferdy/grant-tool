@@ -12,8 +12,9 @@ from engine.models import Verdict, OfficerDecision
 from engine.assess import assess, outcome
 from engine.ai_checks import api_available, cached_cells, offline_mode, MODEL
 from engine.letters import render_letter
-from engine import audit, intake, users, rules_admin
+from engine import audit, intake, users, rules_admin, ai_settings
 from engine.rules_admin import TEMPLATES, REQUIRED_FIELDS
+import ui
 
 st.set_page_config(page_title="Grant Inbox", page_icon="📨", layout="wide")
 st.markdown("""<style>
@@ -29,6 +30,7 @@ mark {background:#ffe08a; color:#111; padding:0 3px; border-radius:3px}
 .step.done {opacity:1; background:rgba(46,160,67,.15); border-color:rgba(46,160,67,.5)}
 .step.now {opacity:1; background:rgba(240,180,0,.18); border-color:rgba(240,180,0,.6); font-weight:600}
 </style>""", unsafe_allow_html=True)
+ui.inject_css()
 
 RB = rules_admin.active_rubric()                  # official rules + active rules added by a super admin
 SAMPLES = load_applications()                     # synthetic demo set
@@ -46,6 +48,9 @@ ICON = {Verdict.MET: "✅", Verdict.NOT_MET: "❌", Verdict.INSUFFICIENT_EVIDENC
 LABEL = {Verdict.MET: "Met", Verdict.NOT_MET: "Not met", Verdict.INSUFFICIENT_EVIDENCE: "Ask applicant",
          Verdict.NEEDS_OFFICER_JUDGEMENT: "You decide", Verdict.NOT_APPLICABLE: "Not applicable"}
 OUTCOME = {"approve": "🟢 Approve", "reject": "🔴 Reject", "clarify": "🟡 Ask to clarify", "officer_decides": "👤 You decide"}
+# Outcome as a coloured status pill (inbox list).
+OUTCOME_PILL = {"approve": ("Approve", "green"), "reject": ("Reject", "red"), "clarify": ("Ask to clarify", "amber"),
+                "officer_decides": ("You decide", "purple")}
 OFFICER_CHOICES = [Verdict.MET, Verdict.NOT_MET, Verdict.INSUFFICIENT_EVIDENCE, Verdict.NOT_APPLICABLE]
 FLAG_ORDER = [Verdict.NOT_MET, Verdict.INSUFFICIENT_EVIDENCE, Verdict.NEEDS_OFFICER_JUDGEMENT, Verdict.MET, Verdict.NOT_APPLICABLE]
 
@@ -59,7 +64,7 @@ def auth_gate() -> dict:
     _, mid, _ = st.columns([1, 1.3, 1])
     with mid:
         if users.count() == 0:
-            st.title("👋 First-time setup")
+            ui.auth_header("First-time setup", "Create the first super admin account")
             st.write("Create the first **super admin** account. Super admins manage rules and users, and can review too.")
             with st.form("setup"):
                 name = st.text_input("Your name")
@@ -76,8 +81,7 @@ def auth_gate() -> dict:
                     except ValueError as e:
                         st.error(str(e))
         else:
-            st.title("🔐 Sign in")
-            st.caption("Grant Eligibility Assistant")
+            ui.auth_header("Welcome back", "Sign in to review grant applications")
             with st.form("login"):
                 username = st.text_input("Username")
                 pw = st.text_input("Password", type="password")
@@ -140,30 +144,34 @@ def close_app():
     st.query_params.clear()
 
 # ---------- sidebar ----------
+NAV_INBOX, NAV_AUDIT = ":material/inbox: Inbox", ":material/history: Audit log"
+NAV_RULES, NAV_USERS = ":material/rule: Rules", ":material/group: Users"
+NAV_AI = ":material/smart_toy: AI mode"
+
+def go_ai_mode():
+    st.session_state.nav = NAV_AI
+
 with st.sidebar:
-    st.markdown(f"### 👋 {html.escape(officer)}")
-    st.caption(f"{users.ROLES[USER['role']]} · @{USER['username']}")
-    if st.button("Sign out"):
-        st.session_state.clear()
-        st.rerun()
-    pages = ["📨 Inbox", "🗂 Audit log"] + (["⚙️ Rules", "👥 Users"] if IS_ADMIN else [])
-    page = st.radio("Go to", pages, label_visibility="collapsed")
+    ui.brand()
+    pages = [NAV_INBOX, NAV_AUDIT] + ([NAV_RULES, NAV_USERS, NAV_AI] if IS_ADMIN else [])
+    page = st.radio("Go to", pages, label_visibility="collapsed", key="nav")
     st.divider()
     blind = st.toggle("Blind review", help="Hide everything the AI found until you have decided each rule yourself. "
                                            "Use this to check you are not just agreeing with the AI.")
-    if offline_mode():
-        st.warning("🧪 **Offline test mode.** A free keyword checker stands in for the AI (no API calls, no cost). "
-                   "It only catches words on its lists. Remove `AI_MODE=offline` from `.env` to use Claude.")
-    elif api_available():
-        st.caption(f"🤖 AI review is on (`{MODEL}`)")
-    else:
-        st.caption("🤖 AI review is **off**: add `ANTHROPIC_API_KEY=...` to `.env`. "
-                   "Code checks still run; anything that needs AI comes to you.")
+    ui.mode_status(ai_settings.mode(), bool(ai_settings.api_key()))
+    if IS_ADMIN and page != NAV_AI:
+        st.button(":material/tune: Change AI mode", on_click=go_ai_mode, width="stretch")
+    elif not IS_ADMIN:
+        st.caption("A super admin can switch between offline and online mode.")
     with st.expander("How it works"):
         st.markdown("1. **📨 An application arrives** in your inbox.\n"
                     f"2. **🤖 The AI and code check it** against all {len(RULES)} rules.\n"
                     "3. **👤 You review** only what was flagged (and the 3 rules a person must always decide).\n"
                     "4. **✉️ You send the decision.** The letter explains each reason in plain English.")
+    ui.user_card(officer, f"{users.ROLES[USER['role']]} · @{USER['username']}")
+    if st.button(":material/logout: Sign out", width="stretch"):
+        st.session_state.clear()
+        st.rerun()
 
 # ---------- email ----------
 def show_intake(results):
@@ -202,8 +210,8 @@ def mail_box():
     bad = audit.unreadable_mail()
     if bad:
         with st.expander(f"⚠️ {len(bad)} email(s) we couldn't turn into an application — reply to the sender"):
-            for m in bad:
-                with st.container(border=True):
+            for i, m in enumerate(bad):
+                with st.container(border=True, key=f"card_mail_{i}"):
                     st.markdown(f"**{html.escape(m['sender'])}** · {html.escape(m['subject'])}")
                     st.markdown("\n".join(f"- {p}" for p in m["problems"].splitlines()))
                     st.code(m["body"], language=None)
@@ -225,13 +233,22 @@ The app only *reads* emails whose subject contains `MAIL_SUBJECT`; it never dele
 
 # ---------- inbox ----------
 def inbox():
-    st.title("📨 Inbox")
+    ui.page_header("Inbox", f"Good to see you, {officer.split()[0].title()}. Here's what needs your review.")
     waiting = [a for a in RECEIVED if a not in FINALS]
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Waiting for you", len(waiting))
-    c2.metric("Decided", len(FINALS))
-    c3.metric("Emails we couldn't read", len(audit.unreadable_mail()))
+    ui.kpi_cards([
+        ("inbox", "Waiting for you", len(waiting), ""),
+        ("check", "Decided", len(FINALS), "green"),
+        ("mail", "Emails we couldn't read", len(audit.unreadable_mail()), "amber"),
+    ])
 
+    if ai_settings.mode() == "online" and not ai_settings.api_key():
+        with st.container(border=True, key="card_needkey"):
+            a, b = st.columns([4, 1.3], vertical_alignment="center")
+            a.markdown("**Online mode is on, but Claude isn't connected yet.**  \n"
+                       "<small>Add an Anthropic API key to let Claude check applications. Until then, "
+                       "the rules that need AI come to you.</small>", unsafe_allow_html=True)
+            if IS_ADMIN:
+                b.button("Connect Claude", type="primary", on_click=go_ai_mode, width="stretch")
     mail_box()
     if api_available() and not offline_mode():
         stale = [a for a in RECEIVED if a not in FINALS and cached_cells(APPS[a], RB) is None]
@@ -268,19 +285,21 @@ def inbox():
         st.success("Nothing here. 🎉" if show == "Waiting for you" else "Nothing here yet.")
     for aid in ids:
         app, cells = APPS[aid], cells_for(aid)
-        with st.container(border=True):
+        with st.container(border=True, key=f"card_inbox_{aid}"):
             left, mid, right = st.columns([6, 2, 1.3], vertical_alignment="center")
             unread = "🔵 " if aid not in FINALS and not decisions_for(aid) else ""
             left.markdown(f"{unread}**{html.escape(app.applicant.name)}**  ·  <small>{RECEIVED[aid]:%d %b %H:%M} · {aid}</small>",
                           unsafe_allow_html=True)
             left.markdown(f"{app.project.title} — ${app.total_requested:,.0f}")
             if aid in FINALS:
-                mid.markdown(f"**Sent:** {OUTCOME[FINALS[aid]['outcome']]}")
+                mid.markdown(f"<small style='color:#667085'>Sent</small><br>{ui.pill(*OUTCOME_PILL[FINALS[aid]['outcome']])}",
+                             unsafe_allow_html=True)
                 left.caption(f"Decided by {FINALS[aid]['officer']}")
             elif blind:
-                mid.markdown("🙈 Blind review")
+                mid.markdown(ui.pill("Blind review", "grey"), unsafe_allow_html=True)
             else:
-                mid.markdown(f"AI suggests  \n**{OUTCOME[ai_suggestion(aid)]}**")
+                mid.markdown(f"<small style='color:#667085'>AI suggests</small><br>{ui.pill(*OUTCOME_PILL[ai_suggestion(aid)])}",
+                             unsafe_allow_html=True)
                 issues = [r for r in to_review(aid, False) if cells[r].verdict in (Verdict.NOT_MET, Verdict.INSUFFICIENT_EVIDENCE)]
                 left.caption("Flagged: " + ", ".join(f"{ICON[cells[r].verdict]} {short(r)}" for r in issues)
                              if issues else "No problems found by the checks.")
@@ -325,7 +344,7 @@ def rule_card(aid: str, rid: str, blind: bool, locked: bool):
     st.session_state.setdefault(f"t_{aid}_{rid}", time.time())
     show_ai = not blind or dec is not None
 
-    with st.container(border=True):
+    with st.container(border=True, key=f"card_rule_{aid}_{rid}"):
         top_l, top_r = st.columns([4, 1.4], vertical_alignment="center")
         icon = ICON[dec.officer_verdict] if dec else (ICON[cell.verdict] if show_ai else "▫️")
         top_l.markdown(f"{icon} **{short(rid)}** <small style='opacity:.6'>{rid}</small>", unsafe_allow_html=True)
@@ -466,8 +485,8 @@ def detail(aid: str):
 
 # ---------- audit log ----------
 def audit_log():
-    st.title("🗂 Audit log")
-    st.caption("Every decision is stored and never overwritten. A changed decision is a new row.")
+    ui.page_header("Audit log", "Every decision is stored and never overwritten.")
+    st.caption("A changed decision is a new row.")
     finals, rows = audit.all_finals(), audit.all_rows()
     st.subheader("Decisions sent")
     if finals:
@@ -496,8 +515,7 @@ METHODS = {"code": "🧮 Automatic check (numbers or a required field)",
            "officer_judgement": "👤 An officer always decides"}
 
 def rules_page():
-    st.title("⚙️ Grant rules")
-    st.caption(f"{RB.grant} · round {RB.round.name}")
+    ui.page_header("Grant rules", f"{RB.grant} · round {RB.round.name}")
     custom = rules_admin.load_custom()
     tab_list, tab_add = st.tabs([f"📋 All rules ({len(RULES)} active)", "➕ Add a rule"])
 
@@ -506,7 +524,7 @@ def rules_page():
         if not custom:
             st.info("No rules added yet. Use the **Add a rule** tab.")
         for r in custom:
-            with st.container(border=True):
+            with st.container(border=True, key=f"card_custom_{r.id}"):
                 a, b = st.columns([5, 1.2], vertical_alignment="center")
                 a.markdown(f"{'🟢' if r.active else '⚪️'} **{html.escape(r.short_name or r.id)}** "
                            f"<small style='opacity:.6'>{r.id} · {METHODS[r.check_method]}</small>", unsafe_allow_html=True)
@@ -594,10 +612,10 @@ def add_rule_form():
 
 # ---------- super admin: users ----------
 def users_page():
-    st.title("👥 Users")
+    ui.page_header("Users", "Who can review applications and manage rules.")
     rows = users.list_users()
     for u in rows:
-        with st.container(border=True):
+        with st.container(border=True, key=f"card_user_{u['username']}"):
             a, b, c = st.columns([4, 1.4, 1.4], vertical_alignment="center")
             a.markdown(f"{'🟢' if u['active'] else '⚪️'} **{html.escape(u['display_name'])}** · @{u['username']} · "
                        f"{users.ROLES[u['role']]}  \n<small style='opacity:.6'>added by {u['created_by']} "
@@ -634,12 +652,106 @@ def users_page():
                 st.error(str(e))
     st.caption("Grant officers review applications and send decisions. Super admins can also manage rules and users.")
 
+# ---------- AI mode ----------
+def ai_mode_page():
+    ui.page_header("AI mode", "Choose who checks the rules that need someone to read the application.")
+    if flash := st.session_state.pop("ai_flash", None):
+        st.success(flash)
+    current = ai_settings.mode()
+    has_key = bool(ai_settings.api_key())
+
+    left, right = st.columns(2, gap="medium")
+    with left:
+        with st.container(border=True, key="card_mode_active" if current == "offline" else "card_mode_offline"):
+            ui.mode_option("flask", "amber", "Offline", "Free · for practice & demos", [
+                "A keyword checker stands in for Claude: <b>no API calls, no cost</b>.",
+                "It only spots words on its lists, so reworded answers can slip through.",
+                "Use it to learn the workflow or demo the tool.",
+            ])
+            if current == "offline":
+                st.button("✓ In use", disabled=True, width="stretch", key="use_off")
+            elif st.button("Switch to offline", width="stretch", key="use_off"):
+                ai_settings.set_mode("offline")
+                st.session_state.cells = {}
+                st.session_state.ai_flash = "Switched to offline mode. The free keyword checker now handles the AI rules."
+                st.rerun()
+    with right:
+        with st.container(border=True, key="card_mode_active" if current == "online" else "card_mode_online"):
+            ui.mode_option("cloud", "green", "Online (Claude)", f"Uses API credits · {MODEL}", [
+                "Claude <b>reads each application</b> and quotes the evidence for every AI rule.",
+                "Catches meaning, not just keywords. Each application is checked twice for consistency.",
+                "Results are cached, so the same application is never billed twice.",
+            ])
+            if current == "online":
+                st.button("✓ In use", disabled=True, width="stretch", key="use_on")
+            elif st.button("Switch to online", type="primary", width="stretch", key="use_on"):
+                ai_settings.set_mode("online")
+                st.session_state.cells = {}
+                st.session_state.ai_flash = "Switched to online mode." + (
+                    "" if has_key else " Connect Claude below to start using it.")
+                st.rerun()
+
+    if current == "offline":
+        st.caption("Your API key (if any) stays saved. Switch to online any time.")
+        return
+
+    st.markdown("### Claude connection")
+    if has_key and not st.session_state.get("replace_key"):
+        with st.container(border=True, key="card_key_status"):
+            a, b, c = st.columns([3, 1.1, 1.1], vertical_alignment="center")
+            a.markdown(f"{ui.pill('Connected', 'green')} &nbsp; API key `{ai_settings.key_hint()}`  \n"
+                       "<small>Saved on this computer only, in <code>.env</code> (never committed to git).</small>",
+                       unsafe_allow_html=True)
+            if b.button("Test key", width="stretch"):
+                with st.spinner("Checking with Anthropic…"):
+                    res = ai_settings.test_api_key(ai_settings.api_key())
+                (st.success if res.ok else st.error)(res.message)
+            if c.button("Replace key", width="stretch"):
+                st.session_state.replace_key = True
+                st.rerun()
+        if st.button("Remove key from this computer", type="tertiary"):
+            ai_settings.remove_api_key()
+            st.session_state.ai_flash = "API key removed from this computer."
+            st.rerun()
+        return
+
+    with st.container(border=True, key="card_key_setup"):
+        st.markdown("#### Connect Claude in 3 steps")
+        ui.step(1, "Create an API key",
+                "Sign in to the Anthropic Console, open <b>API keys</b> and click <b>Create key</b>. "
+                "Name it something like “Grant Inbox”, then copy it (it starts with <code>sk-ant-</code>).")
+        st.link_button("Open Anthropic Console ↗", ai_settings.CONSOLE_KEYS_URL)
+        ui.step(2, "Make sure your account has credits",
+                "Online mode is billed per use. Check or add credits under <b>Billing</b>.")
+        st.link_button("Open Billing ↗", ai_settings.CONSOLE_BILLING_URL)
+        ui.step(3, "Paste the key and test it",
+                "We send one tiny test request (well under $0.001) before saving. The key is stored only on this "
+                "computer, in <code>.env</code>.")
+        key = st.text_input("Anthropic API key", type="password", placeholder="sk-ant-…", label_visibility="collapsed")
+        a, b = st.columns([1.4, 3])
+        if a.button("Test & save key", type="primary", disabled=not key.strip(), width="stretch"):
+            with st.spinner("Checking with Anthropic…"):
+                res = ai_settings.test_api_key(key)
+            if res.ok:
+                ai_settings.save_api_key(key.strip())
+                st.session_state.replace_key = False
+                st.session_state.cells = {}
+                st.session_state.ai_flash = res.message
+                st.rerun()
+            else:
+                st.error(res.message)
+        if has_key and b.button("Cancel"):
+            st.session_state.replace_key = False
+            st.rerun()
+
 # ---------- router ----------
-if page == "🗂 Audit log":
+if page == NAV_AI and IS_ADMIN:
+    ai_mode_page()
+elif page == NAV_AUDIT:
     audit_log()
-elif page == "⚙️ Rules" and IS_ADMIN:
+elif page == NAV_RULES and IS_ADMIN:
     rules_page()
-elif page == "👥 Users" and IS_ADMIN:
+elif page == NAV_USERS and IS_ADMIN:
     users_page()
 elif st.query_params.get("app") in RECEIVED:
     detail(st.query_params["app"])

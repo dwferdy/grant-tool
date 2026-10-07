@@ -7,11 +7,18 @@ Grant used: **International Student Wellbeing Grant Program (Study NT), 2024-25 
 ## Run
 ```
 pip install -r requirements.txt
-python -m pytest -q          # 37 tests should pass
+python -m pytest -q          # 80 tests should pass
 ```
-Put your API key in `.env` as `ANTHROPIC_API_KEY=...` (never commit it; `.env` is in .gitignore).
+Two versions, both at http://localhost:8501:
 
-Officer UI: `./run_app.sh` then open http://localhost:8501. Flow: an application arrives in the inbox → code + AI check it → the officer reviews only the flagged items → the officer sends the decision letter. Without an API key the code checks still run and the AI rules go straight to the officer.
+| Launcher | AI rules checked by | Cost |
+|---|---|---|
+| `./run_offline.sh` | Free keyword checker: for practice and demos | None |
+| `./run_online.sh` | Claude: reads the application and quotes evidence | API credits |
+
+Super admins can also switch any time under **AI mode** in the sidebar. In online mode without a key, the app walks you through creating one in the Anthropic Console, tests it, and saves it to `.env` (git-ignored, owner-only permissions). `./run_app.sh` uses whatever `.env` says.
+
+Officer UI: Flow: an application arrives in the inbox → code + AI check it → the officer reviews only the flagged items → the officer sends the decision letter. Without an API key the code checks still run and the AI rules go straight to the officer.
 
 ## What's here
 | Path | What | Owner |
