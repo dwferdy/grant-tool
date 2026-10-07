@@ -1,0 +1,49 @@
+{
+  "id": "A20",
+  "test_purpose": "R25 political, paraphrased: students hand a petition to their local member of parliament. No listed keyword (political/election/campaign/rally) appears. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Darwin International Student Voice Inc.",
+    "type": "nfp_incorporated",
+    "abn": "61 234 567 005",
+    "nt_based": true,
+    "contact_role": "Secretary"
+  },
+  "project": {
+    "title": "Student Voices at Parliament House",
+    "description": "A one-day visit to Parliament House in Darwin. Students will learn how laws are made, then meet our local member of parliament to hand over a petition asking for longer work-hour limits on student visas.",
+    "location": "Darwin NT",
+    "start_date": "2025-02-20",
+    "end_date": "2025-02-20",
+    "who_can_attend": "Open to all international students studying in the Northern Territory. Entry is free.",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Bus hire",
+      "category": "travel",
+      "amount": 1500
+    },
+    {
+      "item": "Workshop facilitator: how parliament works",
+      "category": "facilitator_fees",
+      "amount": 1800
+    },
+    {
+      "item": "Lunch",
+      "category": "catering",
+      "amount": 1200
+    },
+    {
+      "item": "Petition printing and folders",
+      "category": "materials",
+      "amount": 500
+    },
+    {
+      "item": "Meeting room hire",
+      "category": "venue_hire",
+      "amount": 1000
+    }
+  ],
+  "total_requested": 6000
+}

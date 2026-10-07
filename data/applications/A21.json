@@ -1,0 +1,49 @@
+{
+  "id": "A21",
+  "test_purpose": "R20 membership fees, paraphrased: 'subscriptions' to a professional body. No listed keyword (membership) appears. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Arafura Institute of Technology",
+    "type": "education_provider",
+    "abn": "61 234 567 006",
+    "nt_based": true,
+    "contact_role": "Careers Officer"
+  },
+  "project": {
+    "title": "Engineering Futures Night",
+    "description": "An evening where international engineering students meet local engineers, followed by a one-year student subscription to a national engineering professional body for each participant.",
+    "location": "Darwin NT",
+    "start_date": "2024-10-10",
+    "end_date": "2024-10-10",
+    "who_can_attend": "Open to all international students in the NT studying engineering at any education provider.",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Annual student subscriptions to a national engineering professional body (12 students)",
+      "category": "other",
+      "amount": 1800
+    },
+    {
+      "item": "Guest speakers (3 local engineers)",
+      "category": "facilitator_fees",
+      "amount": 1500
+    },
+    {
+      "item": "Lecture theatre hire",
+      "category": "venue_hire",
+      "amount": 1200
+    },
+    {
+      "item": "Light supper",
+      "category": "catering",
+      "amount": 1000
+    },
+    {
+      "item": "Promotion",
+      "category": "marketing",
+      "amount": 500
+    }
+  ],
+  "total_requested": 6000
+}

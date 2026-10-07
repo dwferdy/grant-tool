@@ -1,0 +1,49 @@
+{
+  "id": "A23",
+  "test_purpose": "False alarm for R25: a 'social media campaign' is marketing, not a political campaign. Everything should be met. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Top End Running Club Inc.",
+    "type": "nfp_incorporated",
+    "abn": "61 234 567 008",
+    "nt_based": true,
+    "contact_role": "Secretary"
+  },
+  "project": {
+    "title": "Welcome Fun Run",
+    "description": "A 5 km fun run along the Darwin waterfront to welcome new international students, followed by a breakfast where they can meet local running groups.",
+    "location": "Darwin NT",
+    "start_date": "2025-03-01",
+    "end_date": "2025-03-01",
+    "who_can_attend": "Open to all international students studying in the Northern Territory. Entry is free.",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Social media campaign to promote the event",
+      "category": "marketing",
+      "amount": 600
+    },
+    {
+      "item": "Course permits and barriers",
+      "category": "equipment_hire",
+      "amount": 1400
+    },
+    {
+      "item": "Breakfast after the run",
+      "category": "catering",
+      "amount": 1500
+    },
+    {
+      "item": "First aid team",
+      "category": "facilitator_fees",
+      "amount": 1000
+    },
+    {
+      "item": "Finisher medals",
+      "category": "materials",
+      "amount": 1500
+    }
+  ],
+  "total_requested": 6000
+}

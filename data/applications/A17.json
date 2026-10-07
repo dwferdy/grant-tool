@@ -1,0 +1,54 @@
+{
+  "id": "A17",
+  "test_purpose": "R17 portable assets, paraphrased: speakers and a projector bought and kept. No listed keyword (laptop/phone/tablet/camera) appears. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Nightcliff Student Movie Club Inc.",
+    "type": "nfp_incorporated",
+    "abn": "61 234 567 002",
+    "nt_based": true,
+    "contact_role": "Secretary"
+  },
+  "project": {
+    "title": "Movies Under the Stars",
+    "description": "Four outdoor movie nights at Nightcliff foreshore showing films from students' home countries, each introduced by a student from that country. The club will buy two Bluetooth speakers and a portable projector and keep them for future club events.",
+    "location": "Darwin NT",
+    "start_date": "2024-08-03",
+    "end_date": "2024-08-24",
+    "who_can_attend": "Open to all international students studying in the Northern Territory. Entry is free.",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Two portable Bluetooth speakers (kept by the club)",
+      "category": "materials",
+      "amount": 900
+    },
+    {
+      "item": "Portable projector and screen (kept by the club)",
+      "category": "materials",
+      "amount": 1100
+    },
+    {
+      "item": "Foreshore site booking (4 nights)",
+      "category": "venue_hire",
+      "amount": 2000
+    },
+    {
+      "item": "Popcorn and soft drinks",
+      "category": "catering",
+      "amount": 1200
+    },
+    {
+      "item": "Film screening licences",
+      "category": "other",
+      "amount": 1000
+    },
+    {
+      "item": "Flyers and social media promotion",
+      "category": "marketing",
+      "amount": 800
+    }
+  ],
+  "total_requested": 7000
+}

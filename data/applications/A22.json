@@ -1,0 +1,49 @@
+{
+  "id": "A22",
+  "test_purpose": "False alarm for R17: hiring a photographer who brings their own camera is a service, not buying a portable asset. Everything should be met. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Casuarina Cultural Exchange Inc.",
+    "type": "nfp_incorporated",
+    "abn": "61 234 567 007",
+    "nt_based": true,
+    "contact_role": "Secretary"
+  },
+  "project": {
+    "title": "Lunar New Year Community Lunch",
+    "description": "A Lunar New Year lunch where international students share dishes and traditions with the wider community. A photographer will capture the day so students can share photos with family overseas.",
+    "location": "Casuarina, Darwin NT",
+    "start_date": "2025-01-29",
+    "end_date": "2025-01-29",
+    "who_can_attend": "Open to all international students studying in the Northern Territory. Entry is free.",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Event photographer (brings own camera), 3 hours",
+      "category": "facilitator_fees",
+      "amount": 600
+    },
+    {
+      "item": "Community hall hire",
+      "category": "venue_hire",
+      "amount": 1500
+    },
+    {
+      "item": "Shared lunch for 100 people",
+      "category": "catering",
+      "amount": 1200
+    },
+    {
+      "item": "Lion dance performance",
+      "category": "facilitator_fees",
+      "amount": 1200
+    },
+    {
+      "item": "Decorations",
+      "category": "materials",
+      "amount": 500
+    }
+  ],
+  "total_requested": 5000
+}

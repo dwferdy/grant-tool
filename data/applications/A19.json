@@ -1,0 +1,49 @@
+{
+  "id": "A19",
+  "test_purpose": "R18 profit, paraphrased: a business keeps ticket income left after costs. No listed keyword (profit/surplus/'tickets will be sold') appears. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Harbourline Events Pty Ltd",
+    "type": "registered_business",
+    "abn": "61 234 567 004",
+    "nt_based": true,
+    "contact_role": "Director"
+  },
+  "project": {
+    "title": "Sunset Harbour Social",
+    "description": "A sunset harbour cruise where international students can meet each other and local volunteers. Tickets cost $35 per student, and any ticket income left over once the costs are covered goes to Harbourline Events.",
+    "location": "Darwin NT",
+    "start_date": "2025-03-15",
+    "end_date": "2025-03-15",
+    "who_can_attend": "Open to all international students in the Northern Territory who buy a ticket.",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Boat charter (3 hours)",
+      "category": "venue_hire",
+      "amount": 3500
+    },
+    {
+      "item": "Finger food",
+      "category": "catering",
+      "amount": 1500
+    },
+    {
+      "item": "Event host",
+      "category": "facilitator_fees",
+      "amount": 1200
+    },
+    {
+      "item": "Bus to the wharf and back",
+      "category": "travel",
+      "amount": 1000
+    },
+    {
+      "item": "Online promotion",
+      "category": "marketing",
+      "amount": 800
+    }
+  ],
+  "total_requested": 8000
+}

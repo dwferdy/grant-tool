@@ -1,0 +1,49 @@
+{
+  "id": "A16",
+  "test_purpose": "R22 alcohol, paraphrased: 'tasting paddles' at a brewery. No listed keyword (beer/wine/alcohol) appears. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Top End Heritage Walks Association Inc.",
+    "type": "nfp_incorporated",
+    "abn": "61 234 567 001",
+    "nt_based": true,
+    "contact_role": "Secretary"
+  },
+  "project": {
+    "title": "Darwin After Dark: Heritage Walk and Brewery Tour",
+    "description": "A Friday evening guided walk through Darwin's wartime heritage sites, finishing with a behind-the-scenes tour of a local craft brewery where each student receives a tasting paddle of the brewery's range.",
+    "location": "Darwin NT",
+    "start_date": "2024-09-13",
+    "end_date": "2024-09-13",
+    "who_can_attend": "Open to all international students aged 18 and over studying in the Northern Territory.",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Heritage guide (evening walk)",
+      "category": "facilitator_fees",
+      "amount": 1500
+    },
+    {
+      "item": "Riverside function room hire",
+      "category": "venue_hire",
+      "amount": 2000
+    },
+    {
+      "item": "Brewery tour with tasting paddles for 30 students",
+      "category": "catering",
+      "amount": 1500
+    },
+    {
+      "item": "Bus between walk and brewery",
+      "category": "travel",
+      "amount": 1500
+    },
+    {
+      "item": "Posters and social media promotion",
+      "category": "marketing",
+      "amount": 500
+    }
+  ],
+  "total_requested": 7000
+}

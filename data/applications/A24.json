@@ -1,0 +1,49 @@
+{
+  "id": "A24",
+  "test_purpose": "Control for R24: an explicit 'grant writing' budget line. Both reviewers should flag it. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Darwin Multifaith Youth Network Inc.",
+    "type": "nfp_incorporated",
+    "abn": "61 234 567 009",
+    "nt_based": true,
+    "contact_role": "Secretary"
+  },
+  "project": {
+    "title": "Harmony Week Picnic",
+    "description": "A Harmony Week picnic in the Darwin Botanic Gardens with games, music and food from students' home countries.",
+    "location": "Darwin NT",
+    "start_date": "2025-03-22",
+    "end_date": "2025-03-22",
+    "who_can_attend": "Open to all international students studying in the Northern Territory. Entry is free.",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Grant writing support for this application",
+      "category": "other",
+      "amount": 800
+    },
+    {
+      "item": "Picnic area booking",
+      "category": "venue_hire",
+      "amount": 1000
+    },
+    {
+      "item": "Games and equipment hire",
+      "category": "equipment_hire",
+      "amount": 1200
+    },
+    {
+      "item": "Picnic food",
+      "category": "catering",
+      "amount": 1500
+    },
+    {
+      "item": "Musicians",
+      "category": "facilitator_fees",
+      "amount": 1500
+    }
+  ],
+  "total_requested": 6000
+}

@@ -7,7 +7,7 @@ Grant used: **International Student Wellbeing Grant Program (Study NT), 2024-25 
 ## Run
 ```
 pip install -r requirements.txt
-python -m pytest -q          # 80 tests should pass
+python -m pytest -q          # 111 tests should pass
 ```
 Two versions, both at http://localhost:8501:
 
@@ -26,7 +26,7 @@ Officer UI: Flow: an application arrives in the inbox → code + AI check it →
 | `data/rubric.json` | 26 atomic rules, each with source, check method, and a plain-English reason for applicants | Team A (maintain), everyone reads |
 | `engine/models.py` | **The A<->B contract.** Rubric, Application, `Cell` (one grid square), `OfficerDecision`. Change only by agreement. | A + B |
 | `engine/code_checks.py` | 10 rules checked by plain code (caps, dates, auspice, completeness) + `verify_quote()` anti-hallucination guard | Team A |
-| `data/applications/A01-A15.json` | 15 synthetic applications (A01-A05 demo set, A06-A15 targeted test set) | Team C |
+| `data/applications/A01-A25.json` | 25 synthetic applications (A01-A05 demo set, A06-A15 targeted test set, A16-A25 AI-rule set) | Team C |
 | `data/expected.json` | Answer key: expected verdict per application and rule | Team C |
 | `tests/` | pytest: caps, clarification-not-rejection, fairness pair, quote guard | Team C |
 | `scripts/` | Regenerate rubric/applications | - |
@@ -56,6 +56,24 @@ Officer UI: Flow: an application arrives in the inbox → code + AI check it →
 | A12 | Business, no ABN, no auspice | R02 insufficient (clarify) |
 | A13 | Catering exactly 25%, travel exactly 50% | All met (boundary test) |
 | A14 / A15 | Fairness pair P2 + insurance grey area | Identical; R19 officer judgement |
+
+### Test set 3 (AI rules: paraphrases and false alarms)
+Built by `scripts/build_applications_set3.py`. Every case passes all code rules, so any problem comes from one AI rule. Use it to compare **offline** and **online (Claude)** mode on the same applications.
+
+| App | Story | Correct answer (Claude should give) | Offline keyword checker (known limit) |
+|---|---|---|---|
+| A16 | Brewery tour with "tasting paddles" | Reject: R22 alcohol | Misses it → approve |
+| A17 | Club buys and keeps Bluetooth speakers + projector | Reject: R17 portable assets | Misses it → approve |
+| A18 | Gold-coin entry goes to a flood relief appeal | Reject: R21 fundraising | Misses it → approve |
+| A19 | Business keeps ticket income after costs | Reject: R18 profit | Misses it → approve |
+| A20 | Students hand a petition to their MP | Reject: R25 political | Misses it → approve |
+| A21 | "Subscriptions" to a professional engineering body | Reject: R20 membership fees | Misses it → approve |
+| A22 | Hired photographer "brings own camera" | Approve | False alarm on R17 → reject |
+| A23 | "Social media campaign" to promote a fun run | Approve | False alarm on R25 → reject |
+| A24 | Explicit "grant writing support" line | Reject: R24 | Agrees |
+| A25 | Online event, applicant outside the NT | Clarify: R04 NT link | Agrees |
+
+`expected.json` holds the correct answers in `ai`/`outcome`, and the offline checker's known differences in `offline`/`offline_outcome`, so the test suite passes in offline mode while still recording the right answer.
 
 Known limit: R08 (started before approval) can't fail on its own, because any start before the assumed approval date is also outside the R06 window. Keep this in mind if you change `earliest_approval_date`.
 

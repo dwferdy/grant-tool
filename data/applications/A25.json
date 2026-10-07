@@ -1,0 +1,44 @@
+{
+  "id": "A25",
+  "test_purpose": "R04 unclear: an online event run by an applicant outside the NT, open to students across Australia. Ask to clarify (not reject). All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Southern Cross Student Connect Inc.",
+    "type": "nfp_incorporated",
+    "abn": "61 234 567 010",
+    "nt_based": false,
+    "contact_role": "Secretary"
+  },
+  "project": {
+    "title": "Study Buddy Online Meetups",
+    "description": "Weekly online meetups where international students practise conversational English and share study tips in small breakout rooms.",
+    "location": "Online (video calls)",
+    "start_date": "2024-08-01",
+    "end_date": "2024-11-28",
+    "who_can_attend": "All international students in Australia can join for free.",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Video platform subscription",
+      "category": "other",
+      "amount": 600
+    },
+    {
+      "item": "Conversation hosts (17 sessions)",
+      "category": "facilitator_fees",
+      "amount": 2500
+    },
+    {
+      "item": "Online promotion",
+      "category": "marketing",
+      "amount": 900
+    },
+    {
+      "item": "Printable study guides",
+      "category": "materials",
+      "amount": 1000
+    }
+  ],
+  "total_requested": 5000
+}

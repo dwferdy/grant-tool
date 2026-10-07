@@ -1,0 +1,49 @@
+{
+  "id": "A18",
+  "test_purpose": "R21 fundraising, paraphrased: entry money goes to a flood relief appeal. No listed keyword (fundraising/charity/donation) appears. All organisations, people and ABNs are fictional.",
+  "pair_id": null,
+  "applicant": {
+    "name": "Palmerston International Friends Inc.",
+    "type": "nfp_incorporated",
+    "abn": "61 234 567 003",
+    "nt_based": true,
+    "contact_role": "Secretary"
+  },
+  "project": {
+    "title": "Global Talent Nights",
+    "description": "Three talent nights where international students perform music, dance and comedy from their cultures. Each night has a gold-coin entry, and all money collected at the door goes to the Top End flood relief appeal.",
+    "location": "Palmerston NT",
+    "start_date": "2024-11-08",
+    "end_date": "2024-11-22",
+    "who_can_attend": "Open to all international students studying in the Northern Territory. Entry is free.",
+    "wellbeing_benefit": "Social connection and wellbeing for international students."
+  },
+  "budget": [
+    {
+      "item": "Community hall hire (3 nights)",
+      "category": "venue_hire",
+      "amount": 2400
+    },
+    {
+      "item": "Sound and lighting hire",
+      "category": "equipment_hire",
+      "amount": 1800
+    },
+    {
+      "item": "MC and stage manager",
+      "category": "facilitator_fees",
+      "amount": 1500
+    },
+    {
+      "item": "Light supper",
+      "category": "catering",
+      "amount": 1400
+    },
+    {
+      "item": "Posters and social media promotion",
+      "category": "marketing",
+      "amount": 400
+    }
+  ],
+  "total_requested": 7500
+}
