@@ -11,6 +11,7 @@ import hashlib, hmac, secrets
 from datetime import datetime
 from typing import Optional
 from engine import audit
+from engine.demo import guard
 
 ROLES = {"super_admin": "Super admin", "officer": "Grant officer"}
 MIN_PASSWORD = 8
@@ -25,6 +26,7 @@ def list_users() -> list[dict]:
     return audit._rows("SELECT username, display_name, role, active, created_by, created_at FROM users ORDER BY created_at")
 
 def create(username: str, display_name: str, role: str, password: str, created_by: str) -> None:
+    guard("Managing user accounts")
     username = username.strip().lower()
     if role not in ROLES:
         raise ValueError(f"Unknown role {role}")
@@ -41,6 +43,7 @@ def create(username: str, display_name: str, role: str, password: str, created_b
 
 def verify(username: str, password: str) -> Optional[dict]:
     """The user (without password fields) if the login is valid and the account is active."""
+    guard("Signing in")   # the public demo has no accounts: everyone is the demo officer
     rows = audit._rows("SELECT * FROM users WHERE username = ?", (username.strip().lower(),))
     if not rows or not rows[0]["active"]:
         return None
@@ -53,6 +56,7 @@ def _active_admins() -> int:
     return len(audit._rows("SELECT 1 FROM users WHERE role = 'super_admin' AND active = 1"))
 
 def set_active(username: str, active: bool) -> None:
+    guard("Managing user accounts")
     u = audit._rows("SELECT role, active FROM users WHERE username = ?", (username,))
     if not active and u and u[0]["role"] == "super_admin" and u[0]["active"] and _active_admins() <= 1:
         raise ValueError("You can't deactivate the last active super admin.")
@@ -60,6 +64,7 @@ def set_active(username: str, active: bool) -> None:
         c.execute("UPDATE users SET active = ? WHERE username = ?", (int(active), username))
 
 def set_password(username: str, password: str) -> None:
+    guard("Managing user accounts")
     if len(password) < MIN_PASSWORD:
         raise ValueError(f"Password must be at least {MIN_PASSWORD} characters.")
     salt = secrets.token_hex(16)

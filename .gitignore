@@ -7,3 +7,4 @@ data/audit.sqlite
 data/cache/
 data/received/
 .DS_Store
+.streamlit/secrets.toml

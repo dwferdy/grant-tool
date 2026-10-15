@@ -7,7 +7,7 @@ Grant used: **International Student Wellbeing Grant Program (Study NT), 2024-25 
 ## Run
 ```
 pip install -r requirements.txt
-python -m pytest -q          # 147 tests should pass
+python -m pytest -q          # 158 tests: 156 pass, 2 skip until the Claude results are cached
 ```
 Two versions, both at http://localhost:8501:
 
@@ -17,6 +17,28 @@ Two versions, both at http://localhost:8501:
 | `./run_online.sh` | Claude: reads the application and quotes evidence | API credits |
 
 Super admins can also switch any time under **AI mode** in the sidebar. In online mode without a key, the app walks you through creating one in the Anthropic Console, tests it, and saves it to `.env` (git-ignored, owner-only permissions). `./run_app.sh` uses whatever `.env` says.
+
+## Public demo
+A locked, offline version runs on Streamlit Community Cloud for anyone to try. Turn it on with `DEMO_MODE=1`:
+
+- AI rules are always checked by the free offline keyword checker. **No Anthropic API calls**; `ANTHROPIC_API_KEY` is ignored and `.env` is never read or written.
+- Nobody can be a super admin: every visitor is a demo grant officer, so AI mode, Rules, Users and the mailbox wizard are hidden.
+- **Nothing is written to the server's disk**: each browser session gets its own in-memory audit store (gone when the tab closes); email/PDF intake and the AI result cache are off. Use the sample applications (all fictional).
+- A banner on every page says "Public demo: offline keyword checker, fictional applications, no AI calls" and links to this repo.
+
+Safety net: the app also switches to demo mode by itself when it runs from Community Cloud's checkout folder (`/mount/src/...`). See `engine/demo.py`; `tests/test_demo_mode.py` checks all of the above.
+
+Try it locally: `DEMO_MODE=1 ./run_app.sh`
+
+Deploy on [share.streamlit.io](https://share.streamlit.io):
+1. **Create app** → *Deploy a public app from GitHub*.
+2. Repository `dwferdy/grant-tool`, branch `main`, main file path `app.py`.
+3. **Advanced settings** → Python version **3.12** (the version `requirements.txt` was pinned and tested with), and in **Secrets** paste:
+   ```toml
+   DEMO_MODE = "1"
+   ```
+   Do not add an API key or mail password. They would be ignored anyway.
+4. **Deploy**. Dependencies come from `requirements.txt` (pinned versions).
 
 Officer UI: Flow: an application arrives in the inbox → code + AI check it → the officer reviews only the flagged items → the officer sends the decision letter. Without an API key the code checks still run and the AI rules go straight to the officer.
 
