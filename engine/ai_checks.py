@@ -15,7 +15,6 @@ from pydantic import BaseModel
 from engine.loader import ROOT
 from engine.models import Application, Rubric, Rule, Cell, Verdict, Quote
 from engine.code_checks import verify_quote
-from engine.demo import is_demo, guard
 
 MODEL = "claude-opus-5-5"
 PROMPT_VERSION = "v1"
@@ -62,8 +61,6 @@ def ai_rules(rubric: Rubric) -> list[Rule]:
     return [r for r in rubric.rules if r.check_method != "code"]
 
 def _load_env() -> None:
-    if is_demo():
-        return   # public demo: never read .env (it could hold an API key)
     try:
         from dotenv import load_dotenv
         load_dotenv(ROOT / ".env")
@@ -71,9 +68,7 @@ def _load_env() -> None:
         pass
 
 def offline_mode() -> bool:
-    """AI_MODE=offline in .env: use the free keyword reviewer instead of Claude. Always offline in the public demo."""
-    if is_demo():
-        return True
+    """AI_MODE=offline in .env: use the free keyword reviewer instead of Claude."""
     _load_env()
     return os.environ.get("AI_MODE", "").strip().lower() == "offline"
 
@@ -110,7 +105,6 @@ def _user_prompt(app: Application, rules: list[Rule], rubric: Rubric) -> str:
 
 # ---------- API ----------
 def _call_claude(app: Application, rules: list[Rule], rubric: Rubric) -> dict[str, _AIRuleResult]:
-    guard("Calling Claude")
     import anthropic
     client = anthropic.Anthropic()
     # Opus 5.5 does not accept temperature; consistency comes from the double run below.
@@ -200,7 +194,7 @@ def cached_cells(app: Application, rubric: Rubric) -> Optional[list[Cell]]:
 
 def run_ai_checks(app: Application, rubric: Rubric, call_api: bool = False) -> list[Cell]:
     """Cells for every non-code rule. Uses the cache; calls Claude only when call_api=True."""
-    hit = None if is_demo() else cached_cells(app, rubric)
+    hit = cached_cells(app, rubric)
     if hit is not None:
         return hit
     rules = ai_rules(rubric)
@@ -221,8 +215,6 @@ def run_ai_checks(app: Application, rubric: Rubric, call_api: bool = False) -> l
         run1, run2 = pool.map(call, range(2))
     cells = [_officer_only_cell(app, r) if r.id in SKIP_AI else _to_cell(app, r, run1.get(r.id), run2.get(r.id))
              for r in rules]
-    if is_demo():
-        return cells   # public demo: no files written on the server (the app keeps results in the session)
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     _cache_path(app).write_text(json.dumps({"key": _cache_key(app, rules), "model": reviewer_name(),
                                             "cells": [c.model_dump(mode="json") for c in cells]}, indent=2))

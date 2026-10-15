@@ -4,37 +4,18 @@ Tables:
 - inbox: when each application arrived
 - decisions: one OfficerDecision per rule the officer reviewed
 - final_decisions: the outcome and letter sent to the applicant
-
-Public demo (engine/demo.py): the file is never opened. The app hands over an in-memory database per browser
-session with use_memory_store(), so visitors can't see each other's decisions and nothing is written to disk.
 """
 from __future__ import annotations
 import sqlite3
 from datetime import datetime
-from typing import Callable, Optional
+from typing import Optional
 from engine.loader import ROOT
 from engine.models import OfficerDecision
-from engine.demo import is_demo, DemoModeError
 
 DB = ROOT / "data/audit.sqlite"
-_memory_store: Optional[Callable[[], sqlite3.Connection]] = None
-
-def memory_connection() -> sqlite3.Connection:
-    """A fresh in-memory database (public demo: one per browser session)."""
-    return sqlite3.connect(":memory:", check_same_thread=False)
-
-def use_memory_store(get_connection: Callable[[], sqlite3.Connection]) -> None:
-    """Public demo: every read/write goes to the connection this returns instead of data/audit.sqlite."""
-    global _memory_store
-    _memory_store = get_connection
 
 def _conn():
-    if is_demo():
-        if _memory_store is None:
-            raise DemoModeError("The public demo never opens data/audit.sqlite; call audit.use_memory_store() first.")
-        c = _memory_store()
-    else:
-        c = sqlite3.connect(DB)
+    c = sqlite3.connect(DB)
     c.execute("""CREATE TABLE IF NOT EXISTS decisions (
         id INTEGER PRIMARY KEY AUTOINCREMENT, application_id TEXT, rule_id TEXT, ai_verdict TEXT,
         officer_verdict TEXT, overridden INTEGER, blind_review INTEGER, officer_note TEXT,
@@ -71,8 +52,6 @@ def reset_demo() -> None:
     with _conn() as c:
         for t in ("inbox", "decisions", "final_decisions", "mail", "mail_dismissed"):
             c.execute(f"DELETE FROM {t}")
-    if is_demo():
-        return   # nothing was saved to disk in the demo
     for p in (ROOT / "data/received").glob("E*.*"):
         p.unlink()
 

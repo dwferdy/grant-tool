@@ -133,13 +133,6 @@ CSS = """
 .ui-step-title { font-weight:600; color:#101828; }
 .ui-step-text { color:#475467; font-size:.92rem; line-height:1.55; }
 
-/* public demo banner */
-.ui-demo { display:flex; gap:12px; align-items:center; padding:12px 16px; margin: 0 0 18px; border-radius:14px;
-  border:1px solid #FEDF89; background:#FFFCF5; color:#344054; font-size:.92rem; line-height:1.45; }
-.ui-demo .ui-kpi-icon { width:36px; height:36px; }
-.ui-demo b { color:#101828; }
-.ui-demo a { color:#6941C6; font-weight:600; }
-
 /* sign-in screen */
 .ui-auth { text-align:center; margin: 6vh 0 18px; }
 .ui-auth .ui-brand { justify-content:center; }
@@ -223,12 +216,3 @@ def mode_option(ic: str, tone: str, title: str, tag: str, bullets: list[str]) ->
 def step(n: int, title: str, text: str) -> None:
     st.markdown(f'<div class="ui-step"><div class="ui-step-num">{n}</div><div><div class="ui-step-title">'
                 f'{html.escape(title)}</div><div class="ui-step-text">{text}</div></div></div>', unsafe_allow_html=True)
-
-
-def demo_banner(text: str, repo_url: str) -> None:
-    """Public demo notice at the top of every page."""
-    st.markdown(
-        f'<div class="ui-demo" role="note"><div class="ui-kpi-icon amber">{icon("flask", 18)}</div>'
-        f'<div><b>{html.escape(text)}</b><br><span>Decisions stay in this browser tab only and disappear when you '
-        f'close it. <a href="{html.escape(repo_url)}" target="_blank" rel="noopener">View the code on GitHub ↗</a>'
-        f'</span></div></div>', unsafe_allow_html=True)

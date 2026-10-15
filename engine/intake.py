@@ -24,7 +24,6 @@ from typing import Optional
 from engine.loader import ROOT
 from engine.models import Application
 from engine import audit
-from engine.demo import is_demo, guard
 
 RECEIVED_DIR = ROOT / "data/received"
 TEMPLATE = ROOT / "letters/email_template.txt"
@@ -85,8 +84,6 @@ class IntakeResult:
     problems: list = field(default_factory=list)
 
 def mail_configured() -> bool:
-    if is_demo():
-        return False   # public demo: no mailbox
     from engine.ai_checks import _load_env
     _load_env()
     return all(os.environ.get(k) for k in ("MAIL_IMAP_HOST", "MAIL_USER", "MAIL_PASSWORD"))
@@ -301,7 +298,6 @@ def _pdf_attachment(msg) -> tuple[Optional[str], Optional[bytes], Optional[str]]
 
 # ---------- storage ----------
 def _next_id() -> str:
-    guard("Saving a received application")
     RECEIVED_DIR.mkdir(parents=True, exist_ok=True)
     n = len(list(RECEIVED_DIR.glob("E*.json"))) + 1
     return f"E{n:03d}"
@@ -318,7 +314,6 @@ def original_pdf(app_id: str) -> Optional[bytes]:
     return p.read_bytes() if p.exists() else None
 
 def _save(app_id: str, app: Application, original: str, pdf: Optional[bytes]) -> None:
-    guard("Saving a received application")
     (RECEIVED_DIR / f"{app_id}.json").write_text(app.model_dump_json(indent=2))
     (RECEIVED_DIR / f"{app_id}.txt").write_text(original)
     if pdf:
@@ -341,7 +336,6 @@ def _quiet_if_retried(was_seen: bool, res: IntakeResult) -> IntakeResult:
 
 def ingest(raw: bytes) -> IntakeResult:
     """Parse one email. Saves the application and the original text. Never turns the same message into two applications."""
-    guard("Email intake")
     msg = email.message_from_bytes(raw, policy=policy.default)
     mid = (msg.get("Message-ID") or "").strip() or "no-id-" + hashlib.sha1(raw).hexdigest()[:16]
     sender, subject = str(msg.get("From", "")), str(msg.get("Subject", ""))
@@ -368,7 +362,6 @@ def ingest(raw: bytes) -> IntakeResult:
 
 def ingest_pdf(data: bytes, filename: str) -> IntakeResult:
     """A filled PDF form dropped straight into the inbox (no email). Never turns the same file into two applications."""
-    guard("PDF intake")
     mid = "pdf-" + hashlib.sha1(data).hexdigest()[:16]
     res = IntakeResult(message_id=mid, sender=f"Uploaded form ({filename})", subject=filename)
     if _already(mid, res):
@@ -391,7 +384,6 @@ def ingest_pdf(data: bytes, filename: str) -> IntakeResult:
 
 def check_mailbox(limit: int = 50) -> list[IntakeResult]:
     """Read (never delete or mark as read) matching emails from the configured IMAP folder."""
-    guard("Checking a mailbox")
     if not mail_configured():
         raise RuntimeError("Mailbox not configured: set MAIL_IMAP_HOST, MAIL_USER and MAIL_PASSWORD in .env.")
     subject = os.environ.get("MAIL_SUBJECT", "Grant application").replace('"', "")

@@ -13,7 +13,6 @@ import os
 from dataclasses import dataclass
 from engine.loader import ROOT
 from engine.ai_checks import _load_env, offline_mode
-from engine.demo import is_demo, guard
 
 ENV_PATH = ROOT / ".env"
 KEY_VARS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")
@@ -27,8 +26,6 @@ def mode() -> str:
 
 
 def api_key() -> str:
-    if is_demo():
-        return ""   # public demo: refuse to read ANTHROPIC_API_KEY, even if the host sets one
     _load_env()
     return next((os.environ[v] for v in KEY_VARS if os.environ.get(v)), "")
 
@@ -41,7 +38,6 @@ def key_hint() -> str:
 
 def write_env(name: str, value: str | None) -> None:
     """Set (or remove, when value is None) one variable in .env, keeping comments and other lines."""
-    guard("Writing .env")
     lines = ENV_PATH.read_text().splitlines() if ENV_PATH.exists() else []
     out, done = [], False
     for line in lines:
@@ -58,7 +54,6 @@ def write_env(name: str, value: str | None) -> None:
 
 
 def set_mode(new_mode: str) -> None:
-    guard("Changing the AI mode")
     value = "offline" if new_mode == "offline" else "claude"
     write_env("AI_MODE", value)
     os.environ["AI_MODE"] = value
@@ -84,7 +79,6 @@ class KeyCheck:
 
 def test_api_key(key: str) -> KeyCheck:
     """Check the key is valid and the account can run requests (sends one 1-token message, < $0.001)."""
-    guard("Testing an API key")
     key = key.strip()
     if not key.startswith("sk-ant-"):
         return KeyCheck(False, "That doesn't look like an Anthropic API key. Keys start with “sk-ant-”.")

@@ -5,10 +5,6 @@
 # Hide the "Deploy" button and developer menu items.
 toolbarMode = "minimal"
 
-[browser]
-# No usage statistics sent to Streamlit.
-gatherUsageStats = false
-
 [theme]
 base = "light"
 primaryColor = "#7F56D9"

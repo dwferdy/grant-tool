@@ -10,7 +10,6 @@ from typing import Optional
 from engine.loader import ROOT, load_rubric
 from engine.models import Rubric, Rule, Source
 from engine import audit
-from engine.demo import guard
 
 CUSTOM_FILE = ROOT / "data/custom_rules.json"
 INTERNAL_SOURCE = {"document": "Internal policy (added by super admin)", "section": "", "url": ""}
@@ -33,7 +32,6 @@ def load_custom() -> list[Rule]:
     return [Rule.model_validate(r) for r in json.loads(CUSTOM_FILE.read_text())]
 
 def _save(rules: list[Rule]) -> None:
-    guard("Changing rules")
     CUSTOM_FILE.write_text(json.dumps([r.model_dump(mode="json", exclude_none=True) for r in rules], indent=2))
 
 def active_rubric() -> Rubric:

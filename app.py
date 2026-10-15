@@ -1,11 +1,9 @@
 """Officer inbox. Run with:  streamlit run app.py
 
 Flow: application arrives -> AI + code review it -> officer checks only the flagged items -> officer sends the decision.
-
-DEMO_MODE=1 (env var or Streamlit secret) runs the locked public demo; see engine/demo.py.
 """
 from __future__ import annotations
-import html, os, re, time
+import html, re, time
 from urllib.parse import quote
 from datetime import datetime
 import pandas as pd
@@ -15,7 +13,7 @@ from engine.models import Verdict, OfficerDecision
 from engine.assess import assess, outcome
 from engine.ai_checks import api_available, cached_cells, offline_mode, MODEL
 from engine.letters import render_letter
-from engine import audit, intake, users, rules_admin, ai_settings, mail_settings, demo
+from engine import audit, intake, users, rules_admin, ai_settings, mail_settings
 from engine.rules_admin import TEMPLATES, REQUIRED_FIELDS
 import ui
 
@@ -34,22 +32,6 @@ mark {background:#ffe08a; color:#111; padding:0 3px; border-radius:3px}
 .step.now {opacity:1; background:rgba(240,180,0,.18); border-color:rgba(240,180,0,.6); font-weight:600}
 </style>""", unsafe_allow_html=True)
 ui.inject_css()
-
-# ---------- public demo ----------
-# A DEMO_MODE secret normally arrives as an environment variable; read st.secrets too, to be sure.
-try:
-    if str(st.secrets.get("DEMO_MODE", "")).strip().lower() in {"1", "true", "yes", "on"}:
-        os.environ["DEMO_MODE"] = "1"
-except Exception:   # no secrets.toml: a normal local run
-    pass
-DEMO = demo.is_demo()
-if DEMO:
-    def _session_db():
-        # One in-memory audit store per browser session: nothing is written to the server's disk.
-        if "demo_db" not in st.session_state:
-            st.session_state.demo_db = audit.memory_connection()
-        return st.session_state.demo_db
-    audit.use_memory_store(_session_db)
 
 RB = rules_admin.active_rubric()                  # official rules + active rules added by a super admin
 SAMPLES = load_applications()                     # synthetic demo set
@@ -78,8 +60,6 @@ def short(rid: str) -> str:
 
 # ---------- login ----------
 def auth_gate() -> dict:
-    if DEMO:
-        return dict(demo.DEMO_USER)   # no accounts in the public demo, and never a super admin
     if st.session_state.get("user"):
         return st.session_state.user
     _, mid, _ = st.columns([1, 1.3, 1])
@@ -116,7 +96,7 @@ def auth_gate() -> dict:
 
 USER = auth_gate()
 officer = USER["display_name"]
-IS_ADMIN = USER["role"] == "super_admin" and not DEMO
+IS_ADMIN = USER["role"] == "super_admin"
 
 # ---------- state ----------
 if "cells" not in st.session_state:
@@ -182,8 +162,6 @@ with st.sidebar:
     ui.mode_status(ai_settings.mode(), bool(ai_settings.api_key()))
     if IS_ADMIN and page != NAV_AI:
         st.button(":material/tune: Change AI mode", on_click=go_ai_mode, width="stretch")
-    elif DEMO:
-        st.caption("Locked to offline mode in this public demo.")
     elif not IS_ADMIN:
         st.caption("A super admin can switch between offline and online mode.")
     with st.expander("How it works"):
@@ -192,7 +170,7 @@ with st.sidebar:
                     "3. **👤 You review** only what was flagged (and the 3 rules a person must always decide).\n"
                     "4. **✉️ You send the decision.** The letter explains each reason in plain English.")
     ui.user_card(officer, f"{users.ROLES[USER['role']]} · @{USER['username']}")
-    if not DEMO and st.button(":material/logout: Sign out", width="stretch"):
+    if st.button(":material/logout: Sign out", width="stretch"):
         st.session_state.clear()
         st.rerun()
 
@@ -222,12 +200,6 @@ def show_intake(results):
         st.toast("Already in your inbox — nothing new.", icon="📭")
 
 def mail_box():
-    if DEMO:
-        st.caption("📭 Email and PDF intake are switched off in the public demo. "
-                   "Use the sample applications below (all fictional).")
-        with st.expander("📝 Application form — share with applicants"):
-            application_form()
-        return
     c1, c2 = st.columns([1, 2], vertical_alignment="bottom")
     configured = intake.mail_configured()
     if not configured:
@@ -408,7 +380,7 @@ def inbox():
                     receive(a)
                 st.rerun()
     not_arrived = [a for a in SAMPLES if a not in RECEIVED]
-    with st.expander("🧪 Demo: sample applications (no email needed)", expanded=DEMO):
+    with st.expander("🧪 Demo: sample applications (no email needed)"):
         b1, b2, b3 = st.columns([2, 2, 1])
         if b1.button("📩 Simulate one arriving", disabled=not not_arrived, width="stretch"):
             receive(not_arrived[0])
@@ -423,8 +395,7 @@ def inbox():
             st.rerun()
 
     if not RECEIVED:
-        st.info("Your inbox is empty. Click **Receive all samples** above to load the fictional applications."
-                if DEMO else "Your inbox is empty. Click **Check mail**, upload an email, or open the demo section above.")
+        st.info("Your inbox is empty. Click **Check mail**, upload an email, or open the demo section above.")
         return
 
     show = st.radio("Show", ["Waiting for you", "Decided", "All"], horizontal=True, label_visibility="collapsed")
@@ -895,8 +866,6 @@ def ai_mode_page():
             st.rerun()
 
 # ---------- router ----------
-if DEMO:
-    ui.demo_banner(demo.BANNER, demo.REPO_URL)
 if page == NAV_AI and IS_ADMIN:
     ai_mode_page()
 elif page == NAV_AUDIT:

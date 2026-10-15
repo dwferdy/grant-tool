@@ -12,7 +12,6 @@ import imaplib, os, socket
 from dataclasses import dataclass
 from engine.ai_checks import _load_env
 from engine.ai_settings import write_env
-from engine.demo import guard
 
 GMAIL_HOST = "imap.gmail.com"
 GMAIL_APP_PASSWORDS_URL = "https://myaccount.google.com/apppasswords"
@@ -40,7 +39,6 @@ def subject() -> str:
 
 def test_connection(host: str, user: str, password: str, folder: str = "INBOX", subj: str = DEFAULT_SUBJECT) -> MailCheck:
     """Log in read-only and count emails whose subject contains `subj`. Never changes the mailbox."""
-    guard("Connecting a mailbox")
     host, user = host.strip(), user.strip()
     password = password.replace(" ", "").strip() if host == GMAIL_HOST else password.strip()
     if not (host and user and password):
